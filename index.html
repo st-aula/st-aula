@@ -154,12 +154,14 @@ function descargar(){
       meta.cursos.forEach(function(c){for(var i=0;i<c.p;i++)ids.push(c.id+'-'+i)});
       if(pideKit)for(var k=0;k<kit.p;k++)ids.push('kit-'+k);
       var gl=meta.glob;if(gl)for(var g=0;g<gl.p;g++)ids.push('glob-'+g);
+      var pn=meta.pend;if(pn)for(var q=0;q<pn.p;q++)ids.push('pend-'+q);
       return (ids.length?leerDocs(ids,tok):Promise.resolve({})).then(function(D){
         var ps=meta.cursos.map(function(c){var z='';for(var i=0;i<c.p;i++){if(!D[c.id+'-'+i])return Promise.resolve(null);z+=D[c.id+'-'+i].z}return gunzip64(z)});
         if(pideKit){var zk='',okk=true;for(var k=0;k<kit.p;k++){if(!D['kit-'+k]){okk=false;break}zk+=D['kit-'+k].z}
           if(okk)ps.push(gunzip64(zk).then(function(txt){kitCompilar(txt,kit.h);return null}))}
         var pglob=Promise.resolve(null);if(gl){var zg='',okg=true;for(var g=0;g<gl.p;g++){if(!D['glob-'+g]){okg=false;break}zg+=D['glob-'+g].z}if(okg)pglob=gunzip64(zg)}
-        return Promise.all([Promise.all(ps),pglob]).then(function(R){var cursos={};R[0].forEach(function(C){if(C)cursos[C.id]=C});return {meta:meta,cursos:cursos,glob:R[1],t:Date.now()}})});
+        var ppend=Promise.resolve(null);if(pn){var zp='',okp=true;for(var q=0;q<pn.p;q++){if(!D['pend-'+q]){okp=false;break}zp+=D['pend-'+q].z}if(okp)ppend=gunzip64(zp)}
+        return Promise.all([Promise.all(ps),pglob,ppend]).then(function(R){var cursos={};R[0].forEach(function(C){if(C)cursos[C.id]=C});return {meta:meta,cursos:cursos,glob:R[1],pend:R[2],t:Date.now()}})});
     })});
 }
 function guardarCache(){if(!personal()||CFG.demo)return;try{localStorage.setItem(LS_D,JSON.stringify(DB))}catch(e){}}
@@ -205,18 +207,30 @@ function ruta(){
   if(h[0]==='casos')return verCasos();
   if(h[0]==='notas')return verNotas();
   if(h[0]==='rub')return verRubrica();
+  if(h[0]==='asis')return verAsis();
+  if(h[0]==='ent')return verEnt();
+  if(h[0]==='comp')return verComp();
+  if(h[0]==='pend')return verPend();
+  if(h[0]==='alert')return verAlertas();
+  if(h[0]==='aten')return verAten();
+  if(h[0]==='citas')return verCitas();
   if(h[0]==='r'&&DB.cursos[h[1]])return verReporte(DB.cursos[h[1]],Number(h[2]),h[3]||'comp',h[4]||'TODAS',h[5]||String(trimAct(DB.cursos[h[1]])));
   if(h[0]==='c'&&DB.cursos[h[1]])return verCurso(DB.cursos[h[1]],h[2],h[3],h[4]);
   inicio();
 }
 
 /* ───────── INICIO ───────── */
+function tiles(){var al=0,ur=DB.pend&&DB.pend.S?(DB.pend.S.urgente||[]).length:0,ci=0;
+  cursos().forEach(function(C){(b1(C).al||[]).forEach(function(a){if(!a.at)al++})});
+  ((G1().citas||{}).proximas||[]).forEach(function(c){if(c.estado==='PENDIENTE'||c.hoy)ci++});
+  return [['asis','✅','Asistencia'],['ent','📦','Control de entregas'],['notas','✏️','Registrar notas'],['rub','🧾','Calificar con rúbrica'],['mej','📈','Mejoras'],['casos','📋','Mis casos'],
+    ['comp','🚸','Comportamiento'],['pend','📌','Mis pendientes',ur],['alert','🚨','Alertas',al],['aten','✍️','Atención a representantes'],['citas','📅','Citas',ci]]}
 function inicio(){
   $('tt').textContent='Reportes rápidos';
   var C=cursos(),tot=0,bajo=0,ne=0,html='';
   C.forEach(function(c){c.e.forEach(function(E){tot++;var p=t2(E.pr);if(p!=null&&p<min())bajo++;if(E.pe.some(function(x){return x.st==='VENC'||x.st==='CLASE'}))ne++})});
   html+='<div class="wrap"><div class="card sbox"><input type="search" id="q" placeholder="🔎 Buscar estudiante (nombre o apellido)…" autocomplete="off" oninput="buscar()"><div id="sug"></div></div>';
-  html+='<div class="kp noprint">'+[['mej','📈','Mejoras'],['casos','📋','Mis casos'],['notas','✏️','Registrar notas'],['rub','🧾','Calificar con rúbrica']].map(function(x){return '<div style="cursor:pointer" onclick="ir(\''+x[0]+'\')"><b style="font-size:24px">'+x[1]+'</b><span>'+x[2]+'</span></div>'}).join('')+'</div>';
+  html+='<div class="kp noprint">'+tiles().map(function(x){return '<div style="cursor:pointer;position:relative" onclick="ir(\''+x[0]+'\')"><b style="font-size:24px">'+x[1]+'</b><span>'+x[2]+'</span>'+(x[3]?'<i style="position:absolute;top:6px;right:8px;background:#C00000;color:#fff;font-style:normal;font-size:11px;font-weight:bold;border-radius:9px;padding:1px 6px">'+x[3]+'</i>':'')+'</div>'}).join('')+'</div>';
   html+='<div class="kp"><div><b>'+C.length+'</b><span>Cursos</span></div><div><b>'+tot+'</b><span>Estudiantes</span></div><div><b class="rojo">'+bajo+'</b><span>Bajo '+min()+' (trimestre actual)</span></div><div><b style="color:#8A5A00">'+ne+'</b><span>Con trabajos sin entregar</span></div></div>';
   html+='<div class="grid2"><div class="card"><div class="h">Mis cursos</div>';
   C.forEach(function(c){var b=c.e.filter(function(E){var p=t2(E.pr);return p!=null&&p<min()}).length;
@@ -251,7 +265,7 @@ function verEst(C,i,tsel){
   h+='<div class="kp"><div><b class="'+cls(E.pr)+'">'+f2(E.pr)+'</b><span>Promedio '+ord(ta)+' trim.</span></div><div><b class="'+(pend.length?'rojo':'ok')+'">'+pend.length+'</b><span>Trabajos pendientes</span></div>'+
      '<div><b>'+(A&&A.pct!=null?Math.round(A.pct*100)+' %':'—')+'</b><span>Asistencia'+(A?' · '+A.f+' faltas':'')+'</span></div><div><b class="'+(E.cp.length?'rojo':'ok')+'">'+E.cp.length+'</b><span>Reportes de comportamiento</span></div></div>';
   h+='<div class="acts noprint"><button class="btn bp" onclick="ir(\'r/'+C.id+'/'+i+'\')">📄 Reporte</button><button class="btn bw" onclick="app(\'wa\',\''+C.id+'\','+i+')">💬 WhatsApp</button></div>'+
-    '<div class="muted noprint" style="margin:-4px 0 10px;text-align:center">Reporte: al instante · WhatsApp: 2 a 4 s (su sistema busca el número y lo registra)</div>';
+    '<div class="muted noprint" style="margin:-4px 0 10px;text-align:center">Reporte: al instante · WhatsApp: 2 a 4 s (su sistema busca el número y lo registra)</div>'+jueBox(C,i);
   // notas por asignatura
   h+='<div class="card"><div class="h">Calificaciones</div><div class="seg noprint">'+[1,2,3].map(function(n){return '<button class="'+(t===n?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/'+n+'\')">'+ord(n)+' trim.</button>'}).join('')+'<button class="'+(t==='A'?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/A\')">Año</button></div>';
   if(t==='A'){
@@ -796,6 +810,302 @@ function rbPasar(){var C=DB.cursos[RB.cid],rep=[].map.call(document.querySelecto
   encolar({k:'rub_pasar',o:{curso:C.c,asig:C.rp.as[RB.ai].a,trim:RB.t,j:RB.j,reemplazar:rep}},'Pasar rúbricas al registro',C.c).then(function(){$('rbP').innerHTML=''}).catch(function(e){toast('❌ '+(e.message||e),8000)})}
 
 /* ───────── arranque ───────── */
+/* ═════════ BLOQUE 1 · asistencia, entregas, comportamiento, pendientes, alertas, atención, citas ═════════ */
+/*CE-INICIO*/
+function ceK(){return typeof K!=='undefined'&&K?K:KIT}
+// Fila del control de entregas tal como la lee el sistema (centFilas_) y datos del reporte (centDatos_ / centMensaje_), con el mismo código.
+function entFila(e,curso,ests){var m={},o={};ests=ests||Object.keys(e.m||{}).concat(Object.keys(e.o||{}));
+  ests.forEach(function(n){var v=(e.m||{})[n];if(v==='SI'||v==='NO'||v==='ATR'||v==='INA')m[n]=v;var t=String((e.o||{})[n]||'').replace(/\s+/g,' ').trim().slice(0,200);if(t)o[n]=t});
+  return {clave:e.k,curso:curso,asig:e.a,trim:String(Number(e.t)||''),comp:String(e.c||''),insumo:e.i?Number(e.i):'',titulo:String(e.ti||'').replace(/\s+/g,' ').trim().slice(0,150),entrega:e.en||'',marcas:m,obs:o}}
+function centMensajeWeb(f,hoy){
+  return 'El día de hoy se realizó la recepción de la actividad «'+f.titulo+'»'+(f.entrega?(f.entrega===hoy?', cuya fecha de entrega fue el día de hoy':', cuya fecha de entrega fue el '+ceK().fDiaMes_(f.entrega)):'')+
+    '. Comparto el registro de entregas para que puedan revisar el cumplimiento de sus representados. La calificación se registrará posteriormente. '+
+    'Solicito a los representantes de los estudiantes que no entregaron realizar el respectivo seguimiento.'}
+function centDatosWeb(cfg,f,ests,hoy,op,nota0){
+  return {cfg:cfg,hoy:hoy,f:f,filas:ests.map(function(n){return {n:n,e:f.marcas[n]||'',obs:f.obs[n]||''}}),c:ceK().centCuenta_(f.marcas,ests),
+    formato:op.formato==='PENDIENTES'?'PENDIENTES':'TODOS',mensaje:String(op.mensaje==null?centMensajeWeb(f,hoy):op.mensaje),firmas:op.firmas!==false,
+    nota:op.nota==null?nota0:String(op.nota).slice(0,300)}}
+/*CE-FIN*/
+function G1(){return (DB.glob&&DB.glob.b1)||{}}
+function b1(C){return C.b1||{ent:[],cp:[],al:[],at:[],w:{}}}
+function p2(n){return String(n).padStart(2,'0')}
+function ahoraHM(){var d=new Date();return p2(d.getHours())+':'+p2(d.getMinutes())}
+function volver(){return '<div class="muted noprint" style="margin-bottom:6px"><a href="#">← Inicio</a></div>'}
+function selCurso(id,cid,onch){return '<select id="'+id+'" onchange="'+onch+'">'+cursos().map(function(C){return '<option value="'+C.id+'"'+(C.id===cid?' selected':'')+'>'+esc(C.c)+'</option>'}).join('')+'</select>'}
+function pendOps(k,f){return COLA.filter(function(x){return x.k===k&&x.est==='PEND'&&(!f||f(x.op))})}
+function inp(id,v,extra){return '<input id="'+id+'" value="'+esc(v==null?'':v)+'" '+(extra||'')+' style="width:100%;font-size:15px;padding:9px 10px;border:1.5px solid #C9D8F2;border-radius:10px;font-family:inherit;color:#0B2545">'}
+function area(id,v,ph){return '<textarea id="'+id+'" placeholder="'+esc(ph||'')+'" style="width:100%;min-height:64px;font-size:14px;padding:9px 10px;border:1.5px solid #C9D8F2;border-radius:10px;font-family:inherit;color:#0B2545">'+esc(v||'')+'</textarea>'}
+function lab(t){return '<div class="h" style="margin:10px 0 4px">'+t+'</div>'}
+function falla(e){toast('❌ '+(e&&e.message||e),8000)}
+function enSistema(acc,C,n,extra){var u=urlApp('web='+acc+'&c64='+b64u(C.c)+'&n64='+b64u(n)+(extra?'&o64='+b64u(JSON.stringify(extra)):''));if(u)window.open(u,'_blank')}
+
+/* ───── ✅ ASISTENCIA ───── */
+var AS={cid:null,f:null,v:{}};
+function verAsis(){
+  var L=cursos();if(!L.length)return inicio();
+  if(!AS.cid||!DB.cursos[AS.cid])AS.cid=L[0].id;if(!AS.f)AS.f=hoyK();
+  var C=DB.cursos[AS.cid],sin=C.e.every(function(E){return E.ar==null});$('tt').textContent='✅ Asistencia';
+  var h='<div class="wrap">'+volver()+'<div class="card">'+selCurso('asC',AS.cid,"AS.cid=this.value;AS.v={};verAsis()")+
+    '<div style="margin-top:8px">'+inp('asF',AS.f,'type="date" max="'+hoyK()+'" onchange="AS.f=this.value;AS.v={};verAsis()"')+'</div><div id="asR" style="margin-top:8px"></div></div>';
+  if(sin)h+='<div class="card vac">Este curso no tiene el registro de asistencia enlazado en MIS CURSOS.</div>';
+  else h+='<div class="card" id="asL"></div><div class="acts"><button class="btn bo" onclick="asTodos()">✓ Todos presentes</button><button class="btn bp" id="asG" onclick="asGuardar()">💾 Guardar asistencia</button></div><div class="muted" style="text-align:center">A = asistió · F = falta · J = justificada · se guarda en su registro de asistencia (solo los cambios).</div>';
+  h+='<div id="colaBox"></div></div>';$('app').innerHTML=h;if(!sin)asLista();pintarCola();
+}
+function asBase(C,E){var v='';(E.ar||[]).forEach(function(r){if(r[0]===AS.f)v=r[1]});
+  pendOps('asis',function(o){return o.curso===C.c&&o.fecha===AS.f}).forEach(function(x){x.op.marcas.forEach(function(m){if(norm(m.n)===norm(E.n))v=m.v})});return v}
+function asTomada(C){return C.e.some(function(E){return E.ar!=null&&asBase(C,E)!==''})}
+function asVal(C,E,i){if(AS.v[i]!=null)return AS.v[i];var b=asBase(C,E);return b||(asTomada(C)?'':'A')}
+function asLista(){var C=DB.cursos[AS.cid],h='',n={A:0,F:0,J:0},fuera=0,tom=asTomada(C);
+  C.e.forEach(function(E,i){if(E.ar==null){fuera++;return}var v=asVal(C,E,i);if(n[v]!=null)n[v]++;
+    h+='<div class="li" style="cursor:default"><div class="x"><b>'+(i+1)+'. '+esc(E.n)+'</b></div><div class="seg" style="margin:0;width:156px;flex:none">'+['A','F','J'].map(function(x){
+      return '<button class="'+(v===x?'on':'')+'"'+(v===x&&x==='F'?' style="background:#C00000"':v===x&&x==='J'?' style="background:#8A5A00"':'')+' onclick="AS.v['+i+']=\''+(v===x?'':x)+'\';asLista()">'+x+'</button>'}).join('')+'</div></div>'});
+  if(fuera)h+='<div class="muted" style="margin-top:6px">'+fuera+' estudiante(s) no están en su registro de asistencia.</div>';
+  $('asL').innerHTML=h;
+  $('asR').innerHTML='<span class="pill pv">'+n.A+' asistieron</span> <span class="pill pr">'+n.F+' faltas</span> <span class="pill pa">'+n.J+' justificadas</span> '+(tom?'<span class="muted">· ya tomada: puede corregirla</span>':'<span class="muted">· aún no tomada: todos aparecen presentes, marque las faltas</span>');
+  var L=asCambios(),b=$('asG');if(b){b.textContent=L.length?'💾 Guardar asistencia ('+L.length+(L.length===1?' cambio)':' cambios)'):'Sin cambios';b.disabled=!L.length;b.style.opacity=L.length?1:.5}}
+function asCambios(){var C=DB.cursos[AS.cid],L=[];C.e.forEach(function(E,i){if(E.ar==null)return;var v=asVal(C,E,i);if(v!==asBase(C,E))L.push({n:E.n,v:v})});return L}
+function asTodos(){var C=DB.cursos[AS.cid];C.e.forEach(function(E,i){if(E.ar!=null)AS.v[i]='A'});asLista()}
+function asGuardar(){var C=DB.cursos[AS.cid],L=asCambios();if(!L.length)return;if(AS.f>hoyK()){toast('Esa fecha todavía no llega.');return}
+  var F=L.filter(function(x){return x.v==='F'}).length;
+  encolar({k:'asis',curso:C.c,fecha:AS.f,marcas:L},'Asistencia del '+fc(AS.f)+' · '+F+' falta(s)',C.c).then(function(){AS.v={};asLista();pintarCola()}).catch(falla)}
+
+/* ───── 📦 CONTROL DE ENTREGAS ───── */
+var EN={cid:null,ai:0,t:1,k:null,m:{},o:{},tit:'',ent:'',fmt:'TODOS',fir:true,msg:null,obsAb:{}};
+var ENC={SI:['✓','#0B7A55','Entregó'],ATR:['⏰','#D18A00','Fuera de plazo'],NO:['✗','#C2352B','No entregó'],INA:['🕒','#13788E','Faltó']};
+function enActs(C){var A=C.rp.as[EN.ai];if(!A)return [];var t=String(EN.t),porK={},us={},L=[];
+  b1(C).ent.forEach(function(f){porK[f.k]=f});
+  (C.rp.acts||[]).filter(function(a){return norm(a.curso)===norm(C.c)&&norm(a.asignatura)===norm(A.a)&&(!a.trimestre||String(a.trimestre)===t)}).forEach(function(a){
+    var k=KIT.centClave_(C.c,A.a,t,a.componente,a.insumo,a.titulo);us[k]=1;L.push({k:k,ti:a.titulo,c:a.componente||'',i:a.insumo,en:a.entrega||'',f:porK[k]||null})});
+  b1(C).ent.forEach(function(f){if(us[f.k]||norm(f.a)!==norm(A.a)||String(f.t)!==t)return;L.push({k:f.k,ti:f.ti,c:f.c,i:f.i,en:f.en,f:f,libre:true})});
+  L.sort(function(a,b){return (b.en||'0')<(a.en||'0')?-1:(b.en||'0')>(a.en||'0')?1:0});return L}
+function enAct(C){if(EN.k==='__nueva')return {k:null,ti:EN.tit,c:'',i:'',en:EN.ent,f:null,nueva:true};return enActs(C).filter(function(a){return a.k===EN.k})[0]||null}
+function enCargar(){var C=DB.cursos[EN.cid],a=enAct(C);EN.m={};EN.o={};EN.obsAb={};EN.msg=null;if(!a||a.nueva)return;
+  if(a.f){EN.m=JSON.parse(JSON.stringify(a.f.m||{}));EN.o=JSON.parse(JSON.stringify(a.f.o||{}))}
+  pendOps('ent',function(o){return o.o.curso===C.c&&o.o.clave===a.k}).forEach(function(x){EN.m=JSON.parse(JSON.stringify(x.op.o.marcas||{}));EN.o=JSON.parse(JSON.stringify(x.op.o.obs||{}))})}
+function verEnt(){
+  if(!necesitaKit())return;if(!KIT.htmlCentReporte_){$('app').innerHTML='<div class="wrap"><div class="card vac">Falta actualizar los datos: en su sistema pulse «📤 Enviar todos mis cursos».</div></div>';return}
+  var LC=cursoAsigs();if(!LC.length)return inicio();
+  if(!EN.cid||!DB.cursos[EN.cid]){EN.cid=LC[0].cid;EN.ai=LC[0].ai;EN.t=trimAct(DB.cursos[EN.cid]);EN.k=null}
+  var C=DB.cursos[EN.cid],L=enActs(C);$('tt').textContent='📦 Control de entregas';
+  if(EN.k==null||(EN.k!=='__nueva'&&!L.some(function(a){return a.k===EN.k}))){EN.k=L.length?L[0].k:'__nueva';enCargar()}
+  var n=C.e.length,h='<div class="wrap">'+volver()+'<div class="card">'+selCursoAsig('enCA',EN.cid,EN.ai,"var p=this.value.split('|');EN.cid=p[0];EN.ai=Number(p[1]);EN.k=null;verEnt()")+segTrim(EN.t,'enTrim')+
+    lab('Actividad')+'<select onchange="EN.k=this.value;enCargar();verEnt()">'+L.map(function(a){var c=a.f?K1cuenta(a.f.m,C):null;
+      return '<option value="'+esc(a.k)+'"'+(a.k===EN.k?' selected':'')+'>'+esc(a.ti)+(a.en?' · '+fc(a.en):'')+(c?' · ✓ '+(c.si+c.atr)+'/'+n:'')+'</option>'}).join('')+
+    '<option value="__nueva"'+(EN.k==='__nueva'?' selected':'')+'>➕ Otra actividad (escribir el nombre)</option></select>';
+  if(EN.k==='__nueva')h+=lab('Nombre de la actividad')+inp('enTit',EN.tit,'maxlength="150" oninput="EN.tit=this.value;enPinta()"')+lab('Fecha de entrega (opcional)')+inp('enEnt',EN.ent,'type="date" onchange="EN.ent=this.value;EN.msg=null;enPinta()"');
+  h+='<div id="enR" style="margin-top:8px"></div></div><div class="card" id="enL"></div>'+
+    '<div class="acts"><button class="btn bo" onclick="enTodos()">✓ Todos entregaron</button><button class="btn bp" id="enG" onclick="enGuardar()">💾 Guardar entregas</button></div>'+
+    '<div class="card noprint"><div class="h">Hoja de entregas (formato oficial)</div><div class="seg">'+[['TODOS','Todo el curso'],['PENDIENTES','Solo pendientes']].map(function(x){return '<button class="'+(EN.fmt===x[0]?'on':'')+'" onclick="EN.fmt=\''+x[0]+'\';verEnt()">'+x[1]+'</button>'}).join('')+'</div>'+
+    '<label style="display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0 8px"><input type="checkbox" '+(EN.fir?'checked':'')+' onchange="EN.fir=this.checked"> Con firmas</label>'+
+    lab('Mensaje para los representantes')+area('enMsg',EN.msg==null?'':EN.msg,'(se usa el mensaje de siempre)')+
+    '<div class="acts"><button class="btn bo" onclick="enDoc()">📄 Ver hoja</button><button class="btn bw" onclick="enWa()">💬 Texto para el grupo</button><button class="btn bo" onclick="enPdf()">🖨️ PDF oficial en Drive</button></div>'+
+    '<div class="muted">La hoja se ve al instante con lo que marcó. El PDF oficial lo guarda su sistema en Drive (con evidencia).</div></div><div id="colaBox"></div></div>';
+  $('app').innerHTML=h;
+  if(EN.msg==null){var f=enF();$('enMsg').value=f?centMensajeWeb(f,hoyK()):''}
+  $('enMsg').oninput=function(){EN.msg=this.value};enLista();pintarCola();
+}
+function K1cuenta(m,C){var K=KIT;return K.centCuenta_(m,C.e.map(function(E){return E.n}))}
+function enTrim(t){EN.t=t;EN.k=null;verEnt()}
+function enLista(){var C=DB.cursos[EN.cid],h='';
+  C.e.forEach(function(E,i){var v=EN.m[E.n]||'',ob=EN.o[E.n]||'';
+    h+='<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x" style="min-width:150px"><b>'+(i+1)+'. '+esc(E.n)+'</b>'+(ob&&!EN.obsAb[i]?'<small style="color:#8A5A00">Obs.: '+esc(ob)+'</small>':'')+'</div><div style="display:flex;gap:4px">'+
+      ['SI','ATR','NO','INA'].map(function(x){var on=v===x;return '<button title="'+ENC[x][2]+'" onclick="enMarca('+i+',\''+x+'\')" style="width:40px;height:36px;border-radius:9px;font-size:15px;font-weight:bold;cursor:pointer;border:1.5px solid '+ENC[x][1]+';background:'+(on?ENC[x][1]:'#fff')+';color:'+(on?'#fff':ENC[x][1])+'">'+ENC[x][0]+'</button>'}).join('')+
+      '<button title="Observación" onclick="EN.obsAb['+i+']=!EN.obsAb['+i+'];enLista()" style="width:36px;height:36px;border-radius:9px;border:1.5px solid #C9D8F2;background:'+(ob?'#FFF1CC':'#fff')+';cursor:pointer">📝</button></div>'+
+      (EN.obsAb[i]?'<div style="flex-basis:100%;margin-top:6px"><input maxlength="200" value="'+esc(ob)+'" placeholder="Observación (opcional)" oninput="EN.o[\''+esc(E.n).replace(/'/g,"\\'")+'\']=this.value;enPinta()" style="width:100%;padding:8px;border:1.5px solid #C9D8F2;border-radius:9px;font-size:14px;font-family:inherit"></div>':'')+'</div>'});
+  $('enL').innerHTML=h||'<div class="vac">Sin estudiantes.</div>';enPinta()}
+function enMarca(i,x){var n=DB.cursos[EN.cid].e[i].n;if(EN.m[n]===x)delete EN.m[n];else EN.m[n]=x;enLista()}
+function enTodos(){DB.cursos[EN.cid].e.forEach(function(E){if(!EN.m[E.n])EN.m[E.n]='SI'});enLista()}
+function enF(){var C=DB.cursos[EN.cid],A=C.rp.as[EN.ai],a=enAct(C);if(!a)return null;
+  var tit=String(a.ti||'').replace(/\s+/g,' ').trim().slice(0,150);if(!tit)return null;
+  var k=a.k||KIT.centClave_(C.c,A.a,String(EN.t),'','',tit);
+  return entFila({k:k,a:A.a,t:EN.t,c:a.c,i:a.i,ti:tit,en:a.en,m:EN.m,o:EN.o},C.c,C.e.map(function(E){return E.n}))}
+function enGuardado(f){var C=DB.cursos[EN.cid],a=enAct(C),b=a&&a.f?entFila(a.f,C.c,C.e.map(function(E){return E.n})):null;
+  var p=pendOps('ent',function(o){return o.o.curso===C.c&&o.o.clave===f.clave});if(p.length){var o=p[p.length-1].op.o;b=entFila({k:o.clave,a:o.asig,t:o.trim,c:o.comp,i:o.insumo,ti:o.titulo,en:o.entrega,m:o.marcas,o:o.obs},C.c,C.e.map(function(E){return E.n}))}
+  return b&&JSON.stringify([b.marcas,b.obs])===JSON.stringify([f.marcas,f.obs])}
+function enPinta(){var C=DB.cursos[EN.cid],f=enF(),b=$('enG');if(!$('enR'))return;
+  if(!f){$('enR').innerHTML='<span class="muted">Escriba el nombre de la actividad.</span>';if(b){b.disabled=true;b.style.opacity=.5}return}
+  var c=K1cuenta(f.marcas,C),g=enGuardado(f);
+  $('enR').innerHTML='<span class="pill pv">'+(c.si+c.atr)+' de '+c.n+' entregaron</span> '+(c.no?'<span class="pill pr">'+c.no+' no</span> ':'')+(c.atr?'<span class="pill pa">'+c.atr+' fuera de plazo</span> ':'')+(c.ina?'<span class="pill pb">'+c.ina+' faltaron</span> ':'')+(c.sin?'<span class="pill pg">'+c.sin+' sin marcar</span>':'')+(f.comp&&f.insumo?'<div class="muted" style="margin-top:4px">'+esc(f.comp)+', insumo '+f.insumo+'</div>':'');
+  if(b){b.textContent=g?'✓ Guardado':'💾 Guardar entregas';b.disabled=g;b.style.opacity=g?.5:1}}
+function enOp(f){var C=DB.cursos[EN.cid],a=enAct(C);return {clave:a&&a.k?a.k:undefined,curso:C.c,asig:f.asig,trim:Number(EN.t),comp:f.comp,insumo:f.insumo,titulo:f.titulo,entrega:f.entrega,marcas:f.marcas,obs:f.obs}}
+function enGuardar(){var f=enF();if(!f){toast('Escriba el nombre de la actividad.');return}var C=DB.cursos[EN.cid],c=K1cuenta(f.marcas,C);
+  return encolar({k:'ent',o:enOp(f)},'Entregas · '+f.titulo+' ('+(c.si+c.atr)+'/'+c.n+')',C.c).then(function(it){if(EN.k==='__nueva'){EN.k=f.clave}enPinta();pintarCola();return it}).catch(falla)}
+function enDocOp(){return {formato:EN.fmt,mensaje:EN.msg==null||EN.msg===''?null:EN.msg,firmas:EN.fir,nota:null}}
+function enD(){var C=DB.cursos[EN.cid],f=enF();if(!f){toast('Escriba el nombre de la actividad.');return null}
+  return centDatosWeb(DB.cursos[EN.cid].rp.cfg,f,C.e.map(function(E){return E.n}),hoyK(),enDocOp(),G1().centNota||'Registro de recepción de trabajos. La calificación se registra después en el cuadro de calificaciones.')}
+function enDoc(){var D=enD();if(!D)return;docModal(KIT.htmlCentReporte_(D),'Control de entregas · '+D.f.titulo,'<button class="btn bw" style="padding:7px 10px" onclick="enWa()">💬 Grupo</button>')}
+function enWa(){var D=enD();if(!D)return;window.open('https://wa.me/?text='+encodeURIComponent(KIT.centTextoWa_(D)),'_blank')}
+function enPdf(){var f=enF();if(!f){toast('Escriba el nombre de la actividad.');return}var C=DB.cursos[EN.cid],o=enDocOp();
+  var pdf=function(){return encolar({k:'entpdf',curso:C.c,clave:f.clave,formato:o.formato,mensaje:o.mensaje==null?undefined:o.mensaje,firmas:o.firmas},'PDF de entregas · '+f.titulo,C.c)};
+  (enGuardado(f)?pdf():enGuardar().then(function(it){if(it)return pdf()})).then(function(){pintarCola()}).catch(falla)}
+
+/* ───── 🚸 COMPORTAMIENTO ───── */
+var CP={cid:null,ai:0,sel:{},f:null,h:null,falta:'',nv:'LEVE',desc:'',med:'',ver:'reg',cit:null};
+function cpHoy(){return hoyK()}
+function cpDesde(){var d=new Date(hoyK()+'T12:00:00');d.setDate(d.getDate()-(G1().compDias||30));return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
+function cpLista(C){var des=cpDesde(),por={};b1(C).cp.forEach(function(x){(por[norm(x.e)]=por[norm(x.e)]||[]).push(x)});
+  pendOps('comp_borrar',function(o){return o.curso===C.c}).forEach(function(p){Object.keys(por).forEach(function(k){por[k]=por[k].filter(function(x){return x.id!==p.op.id})})});
+  return C.e.map(function(E,i){var L=(por[norm(E.n)]||[]).sort(function(a,b){return a.f<b.f?1:-1});
+    return {i:i,n:E.n,total:L.length,mes:L.filter(function(x){return x.f>=des}).length,sinCitar:L.filter(function(x){return x.f>=des&&!x.ci}).length,graves:L.filter(function(x){return norm(x.nv)==='GRAVE'}).length,hist:L}})}
+function verComp(){
+  var LC=cursoAsigs();if(!LC.length)return inicio();
+  if(!CP.cid||!DB.cursos[CP.cid]){CP.cid=LC[0].cid;CP.ai=LC[0].ai}
+  var C=DB.cursos[CP.cid],A=C.rp.as[CP.ai]||{a:''},g=G1(),u=g.umbral||3;$('tt').textContent='🚸 Comportamiento';
+  var h='<div class="wrap">'+volver()+'<div class="card">'+selCursoAsig('cpCA',CP.cid,CP.ai,"var p=this.value.split('|');CP.cid=p[0];CP.ai=Number(p[1]);CP.sel={};verComp()")+
+    '<div class="seg" style="margin-top:8px">'+[['reg','✍️ Registrar'],['lista','📋 Historial'],['citar','📨 Para citar']].map(function(x){return '<button class="'+(CP.ver===x[0]?'on':'')+'" onclick="CP.ver=\''+x[0]+'\';verComp()">'+x[1]+'</button>'}).join('')+'</div></div>';
+  var Ls=cpLista(C);
+  if(CP.ver==='reg'){
+    var nsel=Object.keys(CP.sel).filter(function(k){return CP.sel[k]}).length;
+    h+='<div class="card"><div class="h">Estudiante(s) · '+nsel+' elegido(s)</div>'+C.e.map(function(E,i){var x=Ls[i];return '<label class="li" style="gap:8px"><input type="checkbox" '+(CP.sel[i]?'checked':'')+' onchange="CP.sel['+i+']=this.checked;cpCuenta()"><div class="x"><b>'+esc(E.n)+'</b>'+(x.mes?'<small>'+x.mes+' en los últimos '+(g.compDias||30)+' días'+(x.sinCitar>=u?' · <span class="rojo">para citar</span>':'')+'</small>':'')+'</div></label>'}).join('')+'</div>';
+    h+='<div class="card">'+lab('Fecha y hora')+'<div style="display:flex;gap:8px">'+inp('cpF',CP.f||hoyK(),'type="date" max="'+hoyK()+'" onchange="CP.f=this.value"')+inp('cpH',CP.h||ahoraHM(),'type="time" onchange="CP.h=this.value"')+'</div>'+
+      lab('Falta')+'<select id="cpX" onchange="CP.falta=this.value"><option value="">— Elija —</option>'+(g.faltas||[]).map(function(x){return '<option'+(CP.falta===x?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>'+
+      '<div class="seg" style="margin-top:8px">'+['LEVE','GRAVE'].map(function(x){return '<button class="'+(CP.nv===x?'on':'')+'"'+(CP.nv===x&&x==='GRAVE'?' style="background:#C00000"':'')+' onclick="cpGuarda();CP.nv=\''+x+'\';verComp()">'+(x==='LEVE'?'Leve':'Grave')+'</button>'}).join('')+'</div>'+
+      lab('Descripción (queda solo en su sistema)')+area('cpD',CP.desc,'Qué pasó…')+
+      lab('Medida tomada')+'<select id="cpM" onchange="CP.med=this.value"><option value="">— Ninguna —</option>'+(g.medidas||[]).map(function(x){return '<option'+(CP.med===x?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>'+
+      '<div class="acts" style="margin-top:12px"><button class="btn bp" id="cpG" onclick="cpGuardar()">💾 Registrar</button></div></div>';
+  }else if(CP.ver==='lista'){
+    h+='<div class="card"><div class="h">Registros del curso (todas las asignaturas)</div>';
+    var hay=false;Ls.forEach(function(x){if(!x.total)return;hay=true;
+      h+='<details class="det"><summary><span>'+esc(x.n)+'</span><span>'+(x.graves?'<span class="pill pr">'+x.graves+' grave(s)</span> ':'')+'<span class="pill '+(x.sinCitar>=u?'pr':'pg')+'">'+x.mes+' en 30 días</span> <span class="muted">'+x.total+' ▾</span></span></summary>'+
+        x.hist.map(function(r){return '<div class="li" style="cursor:default"><div class="x"><b>'+esc(r.x)+'</b><small>'+fc(r.f)+(r.h?' '+esc(r.h):'')+(r.a?' · '+esc(r.a):'')+(r.m?' · '+esc(r.m):'')+(r.ci?' · citado ('+esc(r.ci)+')':'')+'</small></div>'+(norm(r.nv)==='GRAVE'?'<span class="pill pr">Grave</span>':'')+
+          '<button class="btn bo" style="padding:5px 8px;font-size:12px" onclick="cpBorrar(\''+esc(r.id)+'\')">🗑</button></div>'}).join('')+
+        '<div class="acts"><button class="btn bo" onclick="cpInforme('+x.i+')">📄 Informe del estudiante (PDF)</button></div></details>'});
+    if(!hay)h+='<div class="vac">Sin registros de comportamiento en este curso. 🎉</div>';
+    h+='<div class="acts"><button class="btn bo" onclick="cpInforme(-1)">📄 Informe del curso (PDF oficial)</button></div><div class="muted">Los informes los arma su sistema con la descripción completa y quedan en Drive.</div></div>';
+  }else{
+    var P=Ls.filter(function(x){return x.sinCitar>=u||x.hist.some(function(r){return !r.ci&&norm(r.nv)==='GRAVE'})});
+    h+='<div class="card"><div class="h">Para citar al representante ('+u+' o más faltas sin citar en '+(g.compDias||30)+' días, o una grave)</div>';
+    if(!P.length)h+='<div class="vac">Nadie para citar por comportamiento. 🎉</div>';
+    P.forEach(function(x){var sc=x.hist.filter(function(r){return !r.ci});
+      h+='<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x"><b>'+esc(x.n)+'</b><small>'+sc.slice(0,8).map(function(r){return fc(r.f)+' '+esc(r.x)}).join(' · ')+'</small></div><button class="btn bp" style="padding:7px 10px" onclick="CP.cit='+x.i+';verComp()">📨 Citar</button>'+
+        (CP.cit===x.i?'<div style="flex-basis:100%;background:#F2F6FD;border-radius:10px;padding:10px;margin-top:8px">'+lab('Fecha de la reunión')+inp('ctF','','type="date" min="'+hoyK()+'"')+
+          '<div style="display:flex;gap:8px">'+'<div style="flex:1">'+lab('Hora')+inp('ctH',g.hora||'07:30','type="time"')+'</div><div style="flex:2">'+lab('Lugar')+inp('ctL',g.lugar||'')+'</div></div>'+
+          lab('Otros motivos')+Object.keys(g.motivos||{}).filter(function(k){return k!=='f'}).map(function(k){return '<label style="display:block;font-size:14px;margin:3px 0"><input type="checkbox" class="ctMo" value="'+k+'"> '+esc(g.motivos[k])+'</label>'}).join('')+
+          lab('Detalle (opcional)')+area('ctD','','')+'<div class="acts"><button class="btn bp" onclick="cpCitar('+x.i+')">📄 Generar citación oficial</button><button class="btn bo" onclick="CP.cit=null;verComp()">Cancelar</button></div></div>':'')+'</div>'});
+    h+='</div>';
+  }
+  h+='<div id="colaBox"></div></div>';$('app').innerHTML=h;
+  if(CP.ver==='reg'){$('cpD').oninput=function(){CP.desc=this.value};cpCuenta()}pintarCola();
+}
+function cpGuarda(){if($('cpD'))CP.desc=$('cpD').value;if($('cpF'))CP.f=$('cpF').value;if($('cpH'))CP.h=$('cpH').value}
+function cpCuenta(){var n=Object.keys(CP.sel).filter(function(k){return CP.sel[k]}).length,b=$('cpG');if(b)b.textContent=n?'💾 Registrar ('+n+(n===1?' estudiante)':' estudiantes)'):'Elija al menos un estudiante'}
+function cpGuardar(){cpGuarda();var C=DB.cursos[CP.cid],A=C.rp.as[CP.ai]||{a:''},ests=C.e.filter(function(E,i){return CP.sel[i]}).map(function(E){return E.n});
+  if(!ests.length){toast('Elija al menos un estudiante.');return}if(!CP.falta){toast('Elija el tipo de falta.');return}
+  var f=CP.f||hoyK();if(f>hoyK()){toast('La fecha todavía no llega.');return}
+  encolar({k:'comp',o:{curso:C.c,asig:A.a,ests:ests,f:f,h:CP.h||ahoraHM(),falta:CP.falta,nivel:CP.nv,desc:String(CP.desc||'').slice(0,600),medida:CP.med}},'Comportamiento · '+CP.falta+' ('+ests.length+')',C.c)
+    .then(function(){CP.sel={};CP.desc='';CP.falta='';CP.med='';CP.nv='LEVE';CP.f=null;CP.h=null;verComp()}).catch(falla)}
+function cpBorrar(id){var C=DB.cursos[CP.cid],A=C.rp.as[CP.ai]||{a:''};if(!confirm('¿Borrar este registro de comportamiento? (Se borra también de su sistema.)'))return;
+  encolar({k:'comp_borrar',id:id,curso:C.c,asig:A.a},'Borrar registro de comportamiento',C.c).then(function(){verComp()}).catch(falla)}
+function cpInforme(i){var C=DB.cursos[CP.cid],A=C.rp.as[CP.ai]||{a:''},est=i>=0?C.e[i].n:'';
+  encolar({k:'comppdf',curso:C.c,asig:A.a,est:est},'Informe de comportamiento · '+(est||'todo el curso'),C.c).then(function(){pintarCola()}).catch(falla)}
+function cpCitar(i){var C=DB.cursos[CP.cid],A=C.rp.as[CP.ai]||{a:''},x=cpLista(C)[i],lim=$('ctF').value;if(!lim){toast('Elija la fecha de la reunión.');return}
+  var mo=[].map.call(document.querySelectorAll('.ctMo:checked'),function(e){return e.value});
+  encolar({k:'comp_citar',o:{curso:C.c,asig:A.a,est:x.n,tipo:'DISC',limite:lim,hora:$('ctH').value,lugar:$('ctL').value,detalle:$('ctD').value,motivos:mo,ids:x.hist.filter(function(r){return !r.ci}).map(function(r){return r.id})}},'Citación · '+x.n,C.c)
+    .then(function(){CP.cit=null;verComp()}).catch(falla)}
+
+/* ───── 📌 MIS PENDIENTES ───── */
+var PEND_IR={notas:'notas',rubricas:'rub',mejora:'casos',citas:'citas',comportamiento:'comp',entregas:'ent'};
+function verPend(){var P=DB.pend;$('tt').textContent='📌 Mis pendientes';
+  var h='<div class="wrap">'+volver();
+  if(!P){$('app').innerHTML=h+'<div class="card vac">Todavía no llegan sus pendientes: en su sistema pulse «📤 Enviar todos mis cursos» (o espere el envío automático).</div></div>';return}
+  var S=P.S||{},k=P.kpi||{};
+  h+='<div class="kp"><div><b class="rojo">'+(S.urgente||[]).length+'</b><span>Urgente</span></div><div><b>'+(S.calificar||[]).length+'</b><span>Por calificar</span></div><div><b>'+(k.rubricas||0)+'</b><span>Rúbricas sin pasar</span></div><div><b>'+(S.enviar||[]).length+'</b><span>Por enviar</span></div></div>';
+  [['urgente','🔴 Urgente'],['calificar','✏️ Por calificar'],['rubricas','🧾 Rúbricas'],['enviar','📨 Por enviar o firmar'],['proximos','📅 Próximos días']].forEach(function(s){var L=S[s[0]]||[];if(!L.length)return;
+    h+='<div class="card"><div class="h">'+s[1]+'</div>'+L.map(function(x){var r=PEND_IR[x.ir];return '<div class="li"'+(r?' onclick="ir(\''+r+'\')"':' style="cursor:default"')+'><div class="x"><b>'+esc(x.t)+'</b><small>'+esc(x.s||'')+(r?'':' · se atiende en su sistema')+'</small></div>'+(x.chip?'<span class="pill '+(s[0]==='urgente'?'pr':'pa')+'">'+esc(x.chip)+'</span>':'')+'</div>'}).join('')+'</div>'});
+  if(P.nee)h+='<div class="ban a">🧩 Tiene '+P.nee+' pendiente(s) de estudiantes con NEE: por confidencialidad se revisan solo en su sistema.</div>';
+  if(!['urgente','calificar','rubricas','enviar','proximos'].some(function(s){return (S[s]||[]).length}))h+='<div class="card vac">¡Todo al día! 🎉</div>';
+  h+='<div class="acts noprint"><button class="btn bo" onclick="pendRecalc()">🔄 Recalcular ahora (10 a 40 s)</button></div><div class="muted" style="text-align:center;margin:8px 0 30px">Calculado por su sistema · '+esc(P.hoyTxt||'')+' · se recalcula solo en el envío automático</div></div>';$('app').innerHTML=h}
+function pendRecalc(){var C=cursos()[0];if(!C)return;var u=urlApp('web=sync&pp=1&c64='+b64u(C.c));if(!u)return;window.open(u,'_blank');toast('Su sistema está recalculando. Al terminar, pulse «Actualizar».',6000)}
+
+/* ───── 🚨 ALERTAS ───── */
+var AL={cid:'',ver:'vig'};
+function verAlertas(){$('tt').textContent='🚨 Alertas tempranas';
+  var Cs=cursos().filter(function(C){return !AL.cid||C.id===AL.cid}),L=[];
+  Cs.forEach(function(C){(b1(C).al||[]).forEach(function(a){L.push({C:C,a:a})})});
+  var pend={};pendOps('alerta').forEach(function(x){pend[norm(x.op.curso)+'|'+norm(x.op.est)]=x.op.accion});
+  var vig=L.filter(function(x){var p=pend[norm(x.C.c)+'|'+norm(x.a.e)];return p?p==='REACTIVAR':!x.a.at}),at=L.filter(function(x){return vig.indexOf(x)<0});
+  var h='<div class="wrap">'+volver()+'<div class="card"><select onchange="AL.cid=this.value;verAlertas()"><option value="">Todos mis cursos</option>'+cursos().map(function(C){return '<option value="'+C.id+'"'+(AL.cid===C.id?' selected':'')+'>'+esc(C.c)+'</option>'}).join('')+'</select>'+
+    '<div class="seg" style="margin-top:8px"><button class="'+(AL.ver==='vig'?'on':'')+'" onclick="AL.ver=\'vig\';verAlertas()">Por atender ('+vig.length+')</button><button class="'+(AL.ver==='at'?'on':'')+'" onclick="AL.ver=\'at\';verAlertas()">Atendidas ('+at.length+')</button></div></div>';
+  var V=AL.ver==='vig'?vig:at;
+  h+='<div class="card">'+(V.length?V.map(function(x){var a=x.a,i=x.C.e.map(function(E){return norm(E.n)}).indexOf(norm(a.e)),pp=pend[norm(x.C.c)+'|'+norm(a.e)];
+    return '<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x" style="min-width:200px"><b>'+(i>=0?'<a href="#e/'+x.C.id+'/'+i+'">'+esc(a.e)+'</a>':esc(a.e))+'</b><small>'+esc(x.C.c)+(a.atx?' · '+esc(a.atx):'')+(a.re?' · <span class="rojo">reincide</span>':'')+'</small>'+
+      a.mo.map(function(m){return '<small>• '+(m.a?esc(m.a)+': ':'')+esc(m.t)+'</small>'}).join('')+'</div><span class="pill '+(a.nv==='ALTO'?'pr':'pa')+'">'+(a.nv==='ALTO'?'Alto':'Medio')+'</span>'+
+      '<div class="acts" style="flex-basis:100%;margin:6px 0 0">'+(pp?'<span class="pill pa">⏳ por aplicar</span>':AL.ver==='vig'?
+        (a.w?'<button class="btn bw" style="padding:7px 10px" onclick="alWa(\''+x.C.id+'\','+i+')">💬 WhatsApp</button>':'')+(a.co?'<button class="btn bo" style="padding:7px 10px" onclick="alAcc(\''+x.C.id+'\',\''+esc(a.e).replace(/'/g,"\\'")+'\',\'CORREO\')">✉️ Correo</button>':'')+
+        '<button class="btn bo" style="padding:7px 10px" onclick="alAcc(\''+x.C.id+'\',\''+esc(a.e).replace(/'/g,"\\'")+'\',\'ATENDIDA\')">✓ Atendida</button>':
+        '<button class="btn bo" style="padding:7px 10px" onclick="alAcc(\''+x.C.id+'\',\''+esc(a.e).replace(/'/g,"\\'")+'\',\'REACTIVAR\')">↺ Volver a la lista</button>')+'</div></div>'}).join(''):'<div class="vac">'+(AL.ver==='vig'?'Ninguna alerta por atender. 🎉':'Ninguna alerta atendida todavía.')+'</div>')+'</div>';
+  h+='<div class="muted" style="text-align:center">WhatsApp: su sistema arma el mensaje con el celular del representante y lo registra. Correo: lo envía su sistema.</div><div id="colaBox"></div></div>';$('app').innerHTML=h;pintarCola()}
+function alWa(cid,i){var C=DB.cursos[cid];if(i<0)return;enSistema('alwa',C,C.e[i].n)}
+function alAcc(cid,est,acc){var C=DB.cursos[cid];if(acc==='CORREO'&&!confirm('¿Enviar el correo de alerta al representante de '+est+'?'))return;
+  encolar({k:'alerta',curso:C.c,est:est,accion:acc},{CORREO:'Correo de alerta',ATENDIDA:'Alerta atendida',REACTIVAR:'Alerta reactivada'}[acc]+' · '+est,C.c).then(function(){verAlertas()}).catch(falla)}
+
+/* ───── ✍️ ATENCIÓN A REPRESENTANTES ───── */
+var AT={cid:null,f:null,ev:'',ab:null};
+function atPar(p){var t=norm(p);if(!t)return '';if(/^PADRE|PAPA/.test(t))return 'Padre';if(/^MADRE|MAMA/.test(t))return 'Madre';if(/^TI[OA]/.test(t))return 'Tío/a';if(/^HERMAN/.test(t))return 'Hermano/a';if(/^ABUEL/.test(t))return 'Abuelo/a';return 'Otro'}
+function atReg(C,f){var m={};(b1(C).at||[]).forEach(function(r){if(r.f===f)m[norm(r.e)]=r});
+  pendOps('aten',function(o){return o.curso===C.c&&(o.fecha||hoyK())===f}).forEach(function(x){var k=norm(x.op.est);if(x.op.d)m[k]={f:f,h:x.op.d.hora,e:x.op.est,p:x.op.d.par,mo:x.op.d.motivos,pend:1};else delete m[k]});
+  if(f===hoyK())pendOps('jue_asis',function(o){return o.curso===C.c}).forEach(function(x){var k=norm(x.op.nombre);if(x.op.quitar)delete m[k];else m[k]={f:f,e:x.op.nombre,mo:['Entrega de reportes','Rendimiento académico'],pend:1}});return m}
+function verAten(){
+  var L=cursos();if(!L.length)return inicio();var g=G1();
+  if(!AT.cid||!DB.cursos[AT.cid])AT.cid=L[0].id;if(!AT.f)AT.f=hoyK();if(!AT.ev)AT.ev=g.atEv||'Atención a padres de familia';
+  var C=DB.cursos[AT.cid],R=atReg(C,AT.f),n=Object.keys(R).length;$('tt').textContent='✍️ Atención a representantes';
+  var h='<div class="wrap">'+volver()+'<div class="card">'+selCurso('atC',AT.cid,"AT.cid=this.value;AT.ab=null;verAten()")+'<div style="margin-top:8px">'+inp('atF',AT.f,'type="date" onchange="AT.f=this.value;AT.ab=null;verAten()"')+'</div>'+
+    lab('Evento')+inp('atEv',AT.ev,'maxlength="80" onchange="AT.ev=this.value"')+'<div style="margin-top:8px"><span class="pill pv">'+n+' de '+C.e.length+' asistieron</span></div></div><div class="card">';
+  C.e.forEach(function(E,i){var r=R[norm(E.n)];
+    h+='<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x" style="min-width:180px"><b>'+(i+1)+'. '+esc(E.n)+'</b><small>'+esc(E.r||'Sin representante registrado')+(E.p?' ('+esc(E.p)+')':'')+(r?' · <span class="ok">✓ asistió'+(r.h?' '+esc(r.h):'')+'</span>'+(r.mo&&r.mo.length?' · '+esc(r.mo.join(', ')):'')+(r.pend?' · ⏳':''):'')+'</small></div>'+
+      (r?'<button class="btn bo" style="padding:6px 9px;font-size:12px" onclick="AT.ab='+i+';verAten()">✏️</button><button class="btn bo" style="padding:6px 9px;font-size:12px" onclick="atQuitar('+i+')">✗ Quitar</button>':
+        '<button class="btn bp" style="padding:7px 10px" onclick="AT.ab='+i+';verAten()">✍️ Asistió</button>'+(b1(C).w&&b1(C).w[E.n]&&AT.f<=hoyK()?'<button class="btn bw" style="padding:7px 10px" title="Avisar que no asistió" onclick="atAviso('+i+')">💬</button>':''))+
+      (AT.ab===i?atForm(C,E,i,r,g):'')+'</div>'});
+  h+='</div><div class="acts"><button class="btn bo" onclick="atPdf(\'FIRMA\')">📄 Hoja para firmas (PDF)</button><button class="btn bo" onclick="atPdf(\'ACTA\')">📄 Acta de asistencia (PDF)</button></div>'+
+    '<div class="muted" style="text-align:center">Los PDF oficiales los arma su sistema y quedan en Drive. 💬 avisa por WhatsApp a quien no asistió.</div><div id="colaBox"></div></div>';
+  $('app').innerHTML=h;pintarCola()}
+function atForm(C,E,i,r,g){var par=r&&r.p?r.p:atPar(E.p),mo=r&&r.mo?r.mo:[];
+  return '<div style="flex-basis:100%;background:#F2F6FD;border-radius:10px;padding:10px;margin-top:8px"><div style="display:flex;gap:8px"><div style="flex:2">'+lab('Representante')+inp('atRep',E.r||'','maxlength="80"')+'</div><div style="flex:1">'+lab('Parentesco')+
+    '<select id="atPar">'+['',].concat(g.atPar||[]).map(function(x){return '<option'+(x===par?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select></div><div style="flex:1">'+lab('Hora')+inp('atH',r&&r.h?r.h:ahoraHM(),'type="time"')+'</div></div>'+
+    lab('Motivos')+(g.atMot||[]).map(function(m){return '<label style="display:inline-block;margin:3px 10px 3px 0;font-size:14px"><input type="checkbox" class="atMo" value="'+esc(m)+'"'+(mo.indexOf(m)>=0?' checked':'')+'> '+esc(m)+'</label>'}).join('')+
+    lab('Compromiso (opcional)')+area('atCo','',r&&r.cm?'Si lo deja vacío se conserva el que ya tenía':'')+lab('Observación (opcional)')+area('atOb','',r?'Si la deja vacía se conserva la que ya tenía':'')+
+    '<div class="acts"><button class="btn bp" onclick="atGuardar('+i+')">💾 Guardar</button><button class="btn bo" onclick="AT.ab=null;verAten()">Cancelar</button></div></div>'}
+function atGuardar(i){var C=DB.cursos[AT.cid],E=C.e[i];AT.ev=$('atEv').value||AT.ev;
+  var d={rep:$('atRep').value,par:$('atPar').value,hora:$('atH').value,motivos:[].map.call(document.querySelectorAll('.atMo:checked'),function(e){return e.value}),comp:$('atCo').value,obs:$('atOb').value};
+  encolar({k:'aten',curso:C.c,fecha:AT.f,est:E.n,d:d,evento:AT.ev},'Atención · '+E.n,C.c).then(function(){AT.ab=null;verAten()}).catch(falla)}
+function atQuitar(i){var C=DB.cursos[AT.cid],E=C.e[i];if(!confirm('¿Quitar la asistencia del representante de '+E.n+' del '+fc(AT.f)+'?'))return;
+  encolar({k:'aten',curso:C.c,fecha:AT.f,est:E.n,d:null,evento:AT.ev},'Quitar atención · '+E.n,C.c).then(function(){verAten()}).catch(falla)}
+function atPdf(modo){var C=DB.cursos[AT.cid];AT.ev=$('atEv').value||AT.ev;
+  encolar({k:'atenpdf',curso:C.c,fecha:AT.f,evento:AT.ev,modo:modo,hojas:3},(modo==='ACTA'?'Acta de asistencia':'Hoja de firmas')+' · '+fc(AT.f),C.c).then(function(){pintarCola()}).catch(falla)}
+function atAviso(i){var C=DB.cursos[AT.cid];AT.ev=$('atEv').value||AT.ev;enSistema('ausw',C,C.e[i].n,{fecha:AT.f,evento:AT.ev})}
+
+/* ───── 📅 CITAS ───── */
+var CI={ver:'prox',ab:null};
+function verCitas(){var c=G1().citas||{proximas:[],historial:[]};$('tt').textContent='📅 Citas con representantes';
+  var pend={};pendOps('cita').forEach(function(x){pend[x.op.id]=x.op.accion});
+  var h='<div class="wrap">'+volver();
+  if(!c.activo)h+='<div class="ban a">Las citas en línea están desactivadas en su sistema (se activan en «📅 Citas»).</div>';
+  h+='<div class="card"><div class="seg"><button class="'+(CI.ver==='prox'?'on':'')+'" onclick="CI.ver=\'prox\';verCitas()">Próximas ('+(c.proximas||[]).length+')</button><button class="'+(CI.ver==='hist'?'on':'')+'" onclick="CI.ver=\'hist\';verCitas()">Historial</button></div>';
+  var L=CI.ver==='prox'?(c.proximas||[]):(c.historial||[]);
+  h+=L.length?L.map(function(x,k){var C=cursos().filter(function(C){return norm(C.c)===norm(x.curso)})[0],pp=pend[x.id],est={PENDIENTE:['Por confirmar','pa'],CONFIRMADA:['Confirmada','pv'],CANCELADA:['Cancelada','pg'],REALIZADA:['Realizada','pb'],'NO ASISTIÓ':['No asistió','pr']}[x.estado]||[x.estado,'pg'];
+    return '<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x" style="min-width:200px"><b>'+esc(x.txt)+(x.hoy?' · <span class="rojo">HOY</span>':'')+'</b><small>'+esc(x.est)+' · '+esc(x.curso)+(x.rep?' · '+esc(x.rep):'')+'</small><small>Motivo: '+esc(x.motivo||'—')+(x.nota?' · '+esc(x.nota):'')+'</small></div><span class="pill '+est[1]+'">'+est[0]+'</span>'+
+      (CI.ver==='prox'&&C?'<div class="acts" style="flex-basis:100%;margin:6px 0 0">'+(pp?'<span class="pill pa">⏳ por aplicar</span>':
+        (x.estado==='PENDIENTE'?'<button class="btn bw" style="padding:7px 10px" onclick="ciWa('+k+',\'CONFIRMAR\')">✓ Confirmar (WhatsApp)</button>':'')+
+        (x.estado!=='CANCELADA'?'<button class="btn bo" style="padding:7px 10px" onclick="CI.ab='+k+';verCitas()">✗ Cancelar</button>':'')+
+        (x.estado==='CONFIRMADA'||x.estado==='PENDIENTE'?'<button class="btn bo" style="padding:7px 10px" onclick="ciAcc('+k+',\'REALIZADA\')">✓ Se realizó</button><button class="btn bo" style="padding:7px 10px" onclick="ciAcc('+k+',\'NOASISTIO\')">✗ No asistió</button>':''))+'</div>'+
+        (CI.ab===k?'<div style="flex-basis:100%;margin-top:6px">'+inp('ciN','','maxlength="300" placeholder="Motivo de la cancelación (va en el mensaje)"')+'<div class="acts"><button class="btn bw" onclick="ciWa('+k+',\'CANCELAR\')">✗ Cancelar y avisar por WhatsApp</button></div></div>':''):'')+'</div>'}).join(''):'<div class="vac">No hay citas.</div>';
+  h+='</div><div class="muted" style="text-align:center">Confirmar y cancelar abren WhatsApp desde su sistema (el número nunca sale de su sistema).</div><div id="colaBox"></div></div>';$('app').innerHTML=h;pintarCola()}
+function ciX(k){var c=G1().citas||{};return (CI.ver==='prox'?c.proximas:c.historial)[k]}
+function ciWa(k,acc){var x=ciX(k),C=cursos().filter(function(C){return norm(C.c)===norm(x.curso)})[0];if(!C)return;var nota=acc==='CANCELAR'&&$('ciN')?$('ciN').value:'';enSistema('cita',C,x.est,{id:x.id,accion:acc,nota:nota});CI.ab=null}
+function ciAcc(k,acc){var x=ciX(k);encolar({k:'cita',id:x.id,accion:acc,nota:'',curso:x.curso},(acc==='REALIZADA'?'Reunión realizada':'No asistió')+' · '+x.est,x.curso).then(function(){verCitas()}).catch(falla)}
+
+/* ───── en la ficha del estudiante (atención del jueves) ───── */
+function jueBox(C,i){var E=C.e[i],hoy=hoyK(),r=atReg(C,hoy)[norm(E.n)],pend=E.pe.filter(function(x){return x.st!=='REC'});
+  var tr={};pendOps('jue_trajo',function(o){return o.curso===C.c&&norm(o.nombre)===norm(E.n)}).forEach(function(x){tr[norm(x.op.p.a)+'|'+norm(x.op.p.tit)]=1});
+  var h='<div class="card noprint"><div class="h">Atención de hoy</div><div class="li" style="cursor:default"><div class="x"><b>Representante</b><small>'+(r?'<span class="ok">✓ Asistió hoy'+(r.h?' '+esc(r.h):'')+'</span>'+(r.pend?' · ⏳':''):'Aún no registrado hoy')+'</small></div>'+
+    (r?'<button class="btn bo" style="padding:7px 10px" onclick="jueAsis(\''+C.id+'\','+i+',true)">✗ Quitar</button>':'<button class="btn bp" style="padding:7px 10px" onclick="jueAsis(\''+C.id+'\','+i+',false)">✍️ Asistió el representante</button>')+'</div>';
+  pend.forEach(function(p,k){var ya=tr[norm(p.a)+'|'+norm(p.t)];h+='<div class="li" style="cursor:default"><div class="x"><b>'+esc(p.t)+'</b><small>'+esc(p.a)+'</small></div>'+(ya?'<span class="pill pa">⏳ recibida</span>':'<button class="btn bo" style="padding:7px 10px" onclick="jueTrajo(\''+C.id+'\','+i+','+k+')">📥 La trajo</button>')+'</div>'});
+  return h+'</div>'}
+function jueAsis(cid,i,quitar){var C=DB.cursos[cid],E=C.e[i];if(quitar&&!confirm('¿Quitar la asistencia del representante de hoy?'))return;
+  encolar({k:'jue_asis',curso:C.c,nombre:E.n,quitar:!!quitar},(quitar?'Quitar asistencia · ':'Asistió el representante · ')+E.n,C.c).then(function(){ruta()}).catch(falla)}
+function jueTrajo(cid,i,k){var C=DB.cursos[cid],E=C.e[i],p=E.pe.filter(function(x){return x.st!=='REC'})[k];if(!p)return;
+  encolar({k:'jue_trajo',curso:C.c,nombre:E.n,p:{a:p.a,tit:p.t,comp:p.c,n:p.n,ent:p.ent}},'La trajo · '+p.t+' · '+E.n,C.c).then(function(){ruta()}).catch(falla)}
+
 function arrancar(){
   vigilarInactividad();
   if(CFG.demo){USER={demo:true};colaCargar();$('app').innerHTML='';actualizar(false);return}
