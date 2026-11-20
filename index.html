@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0B3D91">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>Reportes · Sistema Docente</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#F4F6FA;color:#0B2545;font-family:Arial,Helvetica,sans-serif;font-size:15px}
+a{color:#0B3D91}
+.top{background:#0B3D91;color:#fff;border-bottom:4px solid #FFC000;padding:10px 14px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px}
+.top .t{font-weight:bold;font-size:17px;flex:1;min-width:0}.top .s{font-size:11.5px;color:#BFD7FF;font-weight:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top button{background:none;border:1.5px solid rgba(255,255,255,.5);color:#fff;border-radius:9px;padding:6px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+.top button.y{background:#FFC000;border-color:#FFC000;color:#0B2545;font-weight:bold}
+.wrap{max-width:1200px;margin:0 auto;padding:12px}
+.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;border:1px solid #E3EAF7}
+.h{font-size:11.5px;font-weight:bold;color:#5B6B85;letter-spacing:.4px;margin-bottom:8px;text-transform:uppercase}
+input[type=search],select{width:100%;font-size:16px;padding:11px 12px;border:1.5px solid #C9D8F2;border-radius:12px;background:#fff;color:#0B2545;font-family:inherit}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px}
+.kp div{background:#fff;border:1px solid #E3EAF7;border-radius:12px;text-align:center;padding:10px 4px}
+.kp b{display:block;font-size:22px;color:#0B3D91}.kp span{font-size:11px;color:#5B6B85;font-weight:bold}
+.li{display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid #EEF1F6;cursor:pointer;border-radius:8px}
+.li:hover{background:#F2F6FD}.li:last-child{border-bottom:0}.li .x{flex:1;min-width:0}.li small{display:block;color:#5B6B85;font-size:12px}
+.pill{display:inline-block;font-size:11.5px;font-weight:bold;border-radius:9px;padding:2px 8px;white-space:nowrap}
+.pr{background:#FDE3E3;color:#C00000}.pv{background:#E3F5EA;color:#00803A}.pa{background:#FFF1CC;color:#8A5A00}.pb{background:#E4EEF9;color:#0B3D91}.pg{background:#F1F3F5;color:#5B6B85}
+.rojo{color:#C00000;font-weight:bold}.ok{color:#00803A;font-weight:bold}
+table{border-collapse:collapse;width:100%;font-size:13px}th{background:#0B3D91;color:#fff;padding:7px 6px;text-align:left;font-size:12px;position:sticky;top:0}
+td{border-bottom:1px solid #EEF1F6;padding:7px 6px;vertical-align:top}.c{text-align:center}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.seg{display:flex;border:1.5px solid #C9D8F2;border-radius:10px;overflow:hidden;background:#fff;margin-bottom:8px}
+.seg button{flex:1;border:0;background:#fff;padding:8px 4px;font-weight:bold;font-size:13px;color:#0B3D91;font-family:inherit;cursor:pointer;border-right:1px solid #E3EAF7}
+.seg button:last-child{border-right:0}.seg button.on{background:#0B3D91;color:#fff}
+.btn{display:inline-block;border:0;border-radius:11px;padding:10px 14px;font-weight:bold;font-size:14px;font-family:inherit;cursor:pointer;text-decoration:none;text-align:center}
+.bp{background:#0B3D91;color:#fff}.bo{background:#fff;color:#0B3D91;border:1.5px solid #0B3D91}.bw{background:#25D366;color:#fff}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}.acts .btn{flex:1;min-width:140px}
+.ban{border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:10px}.ban.a{background:#FFF1CC;color:#8A5A00}.ban.r{background:#FDE3E3;color:#9B1C1C}
+.vac{text-align:center;color:#5B6B85;padding:28px 10px}
+.mapa td,.mapa th{padding:4px;text-align:center}.mapa td.n{text-align:left;white-space:nowrap;font-size:12px}
+.sq{display:inline-block;width:22px;height:18px;border-radius:4px;font-size:10px;line-height:18px;color:#fff;font-weight:bold}
+.sOK{background:#3B8C2A}.sNE{background:#D93636}.sINA{background:#E39A1B}.sPEND{background:#C9CED6}.sSINCAL{background:#C9CED6}.sOTRO{background:#7A8AA6}.sX{background:#EEF1F6}
+.grid2{display:grid;grid-template-columns:1fr;gap:10px}
+.det summary{cursor:pointer;font-weight:bold;padding:8px 2px;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.det summary::-webkit-details-marker{display:none}.det[open] summary{border-bottom:1px solid #EEF1F6}
+.login{max-width:380px;margin:40px auto;text-align:center}
+.login .card{padding:24px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1.5px solid #C9D8F2;border-radius:24px;background:#fff;padding:11px;font-size:15px;font-family:inherit;cursor:pointer;color:#0B2545;font-weight:bold}
+.load{position:fixed;inset:0;background:rgba(244,246,250,.85);display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:20;font-weight:bold;color:#0B3D91}
+.spin{width:34px;height:34px;border:4px solid #C9D8F2;border-top-color:#0B3D91;border-radius:50%;animation:g 1s linear infinite}@keyframes g{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0B2545;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;display:none;z-index:30;max-width:92%}
+.nota{font-weight:bold}
+@media (max-width:620px){.hm{display:none}}
+.muted{color:#5B6B85;font-size:12px}
+.sbox{position:relative}
+.sug{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid #C9D8F2;border-radius:12px;margin-top:4px;max-height:60vh;overflow:auto;z-index:8;box-shadow:0 8px 20px rgba(11,37,69,.15)}
+@media (min-width:900px){.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.wrap{padding:16px}}
+@media print{.top,.acts,.noprint{display:none!important}body{background:#fff}.card{border:0;padding:6px 0}.det{display:block}.det>*{display:block}th{position:static}}
+</style>
+</head><body>
+<div class="top" id="top" style="display:none"><div class="t"><span id="tt">Reportes</span><div class="s" id="ts"></div></div>
+<button id="bInicio" onclick="ir('')" title="Inicio">⌂</button><button class="y" id="bAct" onclick="actualizar(true)">Actualizar</button><button onclick="salir()">Salir</button></div>
+<div id="app"><div class="vac">Cargando…</div></div>
+<div class="load" id="load"><div class="spin"></div><div id="loadT">Cargando…</div></div>
+<div class="toast" id="toast"></div>
+<script src="config.js"></script>
+<script>
+"use strict";
+var CFG = window.CACHA_CONFIG || {};
+var DB = null;            // {meta, cursos:{id:C}}
+var USER = null, AUTH = null, FB = null, ultimoUso = Date.now();
+var LS_D = 'cacha_web_datos_v1', LS_P = 'cacha_web_personal';
+var EST = {OK:['Entregó','pb'],NE:['No entregó','pr'],INA:['Pendiente (inasistencia)','pa'],PEND:['Por entregar','pg'],SINCAL:['Sin calificar','pg'],OTRO:['Registrado','pg']};
+var PEN = {PLAZO:['Aún en plazo','pa'],VENC:['Plazo vencido','pr'],INA:['Por inasistencia','pa'],CLASE:['No la presentó en clase','pr'],REC:['Ya la entregó','pv']};
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim()}
+function t2(n){return n==null||n===''||isNaN(n)?null:Math.floor(Number(n)*100+1e-7)/100}
+function f2(n){var t=t2(n);return t==null?'—':t.toFixed(2).replace('.',',')}
+function fc(k){if(!k)return '';var p=String(k).split('-');return p.length===3?p[2]+'/'+p[1]:k}
+function ord(n){return {1:'1.er',2:'2.º',3:'3.er'}[Number(n)]||n}
+function min(){return (DB&&DB.meta&&DB.meta.notaMin)||7}
+function cls(n){var t=t2(n);return t==null?'':(t<min()?'rojo':'')}
+function toast(t,ms){var e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(function(){e.style.display='none'},ms||3200)}
+function cargando(on,t){$('load').style.display=on?'flex':'none';if(t)$('loadT').textContent=t}
+function personal(){try{return localStorage.getItem(LS_P)==='1'}catch(e){return false}}
+
+/* ───────── inicio de sesión (Firebase Auth con la cuenta de Google del docente) ───────── */
+function pantallaLogin(msg){
+  $('top').style.display='none';
+  $('app').innerHTML='<div class="login"><div class="card"><div style="font-size:34px">🔐</div><div style="font-size:18px;font-weight:bold;margin:6px 0 2px">Reportes · Sistema Docente</div>'+
+  '<div class="muted" style="margin-bottom:16px">Acceso privado. Solo la cuenta autorizada del docente puede entrar.</div>'+
+  (msg?'<div class="ban r">'+esc(msg)+'</div>':'')+
+  '<button class="gbtn" onclick="entrar()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg> Iniciar sesión con Google</button>'+
+  '<label style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:14px;font-size:13px;color:#3A4D6B"><input type="checkbox" id="esPersonal" '+(personal()?'checked':'')+'> Es mi dispositivo personal (mantener la sesión)</label>'+
+  '<div class="muted" style="margin-top:8px">En una computadora compartida deje la casilla sin marcar: la sesión se cierra sola tras 30 minutos sin uso.</div></div></div>';
+}
+function cargarFirebase(){
+  if(FB)return Promise.resolve(FB);
+  var v='10.12.2';
+  return Promise.all([import('https://www.gstatic.com/firebasejs/'+v+'/firebase-app.js'),import('https://www.gstatic.com/firebasejs/'+v+'/firebase-auth.js')]).then(function(m){
+    var app=m[0].initializeApp({apiKey:CFG.apiKey,authDomain:CFG.authDomain,projectId:CFG.projectId,appId:CFG.appId});
+    FB={A:m[1],auth:m[1].getAuth(app)};return FB});
+}
+function entrar(){
+  try{localStorage.setItem(LS_P,$('esPersonal')&&$('esPersonal').checked?'1':'0')}catch(e){}
+  cargando(true,'Abriendo Google…');
+  cargarFirebase().then(function(F){
+    return F.A.setPersistence(F.auth,personal()?F.A.browserLocalPersistence:F.A.browserSessionPersistence).then(function(){
+      var p=new F.A.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+      return F.A.signInWithPopup(F.auth,p)});
+  }).then(function(){cargando(false)}).catch(function(e){cargando(false);
+    var m=String(e&&e.code||e);
+    if(/popup-closed|cancelled-popup/.test(m))return;
+    if(/popup-blocked/.test(m))return pantallaLogin('El navegador bloqueó la ventana de Google. Permita las ventanas emergentes para esta página y vuelva a intentar.');
+    if(/unauthorized-domain/.test(m))return pantallaLogin('Falta autorizar esta dirección en Firebase (Authentication › Configuración › Dominios autorizados).');
+    pantallaLogin('No se pudo iniciar sesión ('+m+').')});
+}
+function salir(){
+  try{localStorage.removeItem(LS_D)}catch(e){}
+  DB=null;USER=null;
+  if(FB)FB.A.signOut(FB.auth).then(function(){pantallaLogin()});else pantallaLogin();
+}
+function vigilarInactividad(){
+  ['click','keydown','touchstart','scroll'].forEach(function(ev){document.addEventListener(ev,function(){ultimoUso=Date.now()},{passive:true})});
+  setInterval(function(){if(USER&&!personal()&&Date.now()-ultimoUso>30*60000){salir();toast('Sesión cerrada por inactividad.',5000)}},60000);
+}
+
+/* ───────── datos: índice + resúmenes comprimidos (Firestore, solo lectura) ───────── */
+function urlDocs(){return 'https://firestore.googleapis.com/v1/projects/'+CFG.projectId+'/databases/(default)/documents'}
+function leerDocs(ids,token){
+  var base='projects/'+CFG.projectId+'/databases/(default)/documents/d/';
+  return fetch(urlDocs()+':batchGet',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({documents:ids.map(function(i){return base+i})})}).then(function(r){
+      if(r.status===403)throw new Error('SIN_PERMISO');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(arr){
+      var o={};arr.forEach(function(x){if(x.found){var id=x.found.name.split('/').pop(),f=x.found.fields||{};o[id]={};Object.keys(f).forEach(function(k){o[id][k]=f[k].stringValue!=null?f[k].stringValue:(f[k].integerValue!=null?Number(f[k].integerValue):null)})}});return o});
+}
+function gunzip64(b64){
+  var bin=atob(b64),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  if(typeof DecompressionStream==='undefined')return Promise.reject(new Error('Este navegador es muy antiguo. Actualice Chrome o Safari.'));
+  var s=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Response(s).text().then(function(t){return JSON.parse(t)});
+}
+function descargar(){
+  if(CFG.demo)return fetch(CFG.demo).then(function(r){return r.json()});
+  return USER.getIdToken().then(function(tok){
+    return leerDocs(['meta'],tok).then(function(m){
+      if(!m.meta)throw new Error('SIN_DATOS');
+      var meta=JSON.parse(m.meta.j),ids=[];
+      meta.cursos.forEach(function(c){for(var i=0;i<c.p;i++)ids.push(c.id+'-'+i)});
+      return (ids.length?leerDocs(ids,tok):Promise.resolve({})).then(function(D){
+        var ps=meta.cursos.map(function(c){var z='';for(var i=0;i<c.p;i++){if(!D[c.id+'-'+i])return Promise.resolve(null);z+=D[c.id+'-'+i].z}return gunzip64(z)});
+        return Promise.all(ps).then(function(L){var cursos={};L.forEach(function(C){if(C)cursos[C.id]=C});return {meta:meta,cursos:cursos,t:Date.now()}})});
+    })});
+}
+function guardarCache(){if(!personal()||CFG.demo)return;try{localStorage.setItem(LS_D,JSON.stringify(DB))}catch(e){}}
+function leerCache(){if(!personal())return null;try{return JSON.parse(localStorage.getItem(LS_D)||'null')}catch(e){return null}}
+function actualizar(aviso){
+  if(aviso)cargando(true,'Trayendo los datos más recientes…');
+  return descargar().then(function(d){DB=d;guardarCache();cargando(false);encabezado();ruta();if(aviso)toast('Datos actualizados.')}).catch(function(e){
+    cargando(false);var m=String(e&&e.message||e);
+    if(m==='SIN_PERMISO'){var em=USER&&USER.email?USER.email:'Esta cuenta';DB=null;try{localStorage.removeItem(LS_D)}catch(x){}if(FB)FB.A.signOut(FB.auth).then(function(){pantallaLogin('La cuenta '+em+' no está autorizada para ver los reportes.')});else pantallaLogin('Esta cuenta no está autorizada.');return}
+    if(m==='SIN_DATOS'){$('top').style.display='flex';$('app').innerHTML='<div class="wrap"><div class="card vac">Todavía no hay datos. En su sistema abra <b>⚙️ Configuración › 🌐 Página web rápida</b> y pulse <b>📤 Enviar todos mis cursos</b>.</div></div>';return}
+    if(DB){toast('Sin conexión: se muestran los últimos datos guardados.',5000);return}
+    $('top').style.display='flex';$('app').innerHTML='<div class="wrap"><div class="card vac">No se pudieron traer los datos ('+esc(m)+'). Revise su internet y pulse «Actualizar».</div></div>';
+  });
+}
+
+/* ───────── utilidades de datos ───────── */
+function cursos(){return Object.keys(DB.cursos).map(function(k){return DB.cursos[k]}).sort(function(a,b){return a.c<b.c?-1:1})}
+function trimAct(C){return Number((C&&C.tr)||(DB.meta&&DB.meta.trim)||1)}
+function tDe(g,t){return (g.t||[]).filter(function(x){return Number(x.t)===Number(t)})[0]||null}
+function totTrim(g,t){var T=tDe(g,t);if(!T)return null;return T.tot!=null?T.tot:T.pf}
+function promEst(E,C,t){
+  if(t==null||Number(t)===trimAct(C))return E.pr;
+  var v=E.g.map(function(g){return totTrim(g,t)}).filter(function(n){return n!=null});
+  return v.length?Math.round(v.reduce(function(s,n){return s+n},0)/v.length*100)/100:null}
+function neTrim(E,t){var n=0;E.g.forEach(function(g){var T=tDe(g,t);if(T)T.it.forEach(function(i){if(i[4]==='NE')n++})});return n}
+function anual(g){var v=[1,2,3].map(function(t){return totTrim(g,t)}).filter(function(n){return n!=null}).map(t2);return v.length?Math.floor(v.reduce(function(s,n){return s+n},0)/v.length*100+1e-7)/100:null}
+
+/* ───────── navegación ───────── */
+function ir(h){location.hash=h}
+window.addEventListener('hashchange',function(){ruta();window.scrollTo(0,0)});
+function encabezado(){
+  $('top').style.display='flex';
+  var m=DB.meta||{},horas=cursos().map(function(c){return c.f+' '+c.h}).sort();
+  var ult=horas.length?horas[horas.length-1]:'';
+  $('ts').textContent=(m.docente?m.docente+' · ':'')+(ult?'Datos de '+fc(ult.slice(0,10))+' '+ult.slice(11):'');
+}
+function ruta(){
+  if(!DB)return;
+  var h=location.hash.replace(/^#/,'').split('/').map(function(x){try{return decodeURIComponent(x)}catch(e){return x}});
+  if(h[0]==='e'&&DB.cursos[h[1]])return verEst(DB.cursos[h[1]],Number(h[2]),h[3]);
+  if(h[0]==='c'&&DB.cursos[h[1]])return verCurso(DB.cursos[h[1]],h[2],h[3],h[4]);
+  inicio();
+}
+
+/* ───────── INICIO ───────── */
+function inicio(){
+  $('tt').textContent='Reportes rápidos';
+  var C=cursos(),tot=0,bajo=0,ne=0,html='';
+  C.forEach(function(c){c.e.forEach(function(E){tot++;var p=t2(E.pr);if(p!=null&&p<min())bajo++;if(E.pe.some(function(x){return x.st==='VENC'||x.st==='CLASE'}))ne++})});
+  html+='<div class="wrap"><div class="card sbox"><input type="search" id="q" placeholder="🔎 Buscar estudiante (nombre o apellido)…" autocomplete="off" oninput="buscar()"><div id="sug"></div></div>';
+  html+='<div class="kp"><div><b>'+C.length+'</b><span>Cursos</span></div><div><b>'+tot+'</b><span>Estudiantes</span></div><div><b class="rojo">'+bajo+'</b><span>Bajo '+min()+' (trimestre actual)</span></div><div><b style="color:#8A5A00">'+ne+'</b><span>Con trabajos sin entregar</span></div></div>';
+  html+='<div class="grid2"><div class="card"><div class="h">Mis cursos</div>';
+  C.forEach(function(c){var b=c.e.filter(function(E){var p=t2(E.pr);return p!=null&&p<min()}).length;
+    html+='<div class="li" onclick="ir(\'c/'+c.id+'\')"><div class="x"><b>'+esc(c.c)+'</b><small>'+c.e.length+' estudiantes · '+esc(c.as.join(', '))+'</small></div>'+(b?'<span class="pill pr">'+b+' bajo '+min()+'</span>':'<span class="pill pv">Todos sobre '+min()+'</span>')+'</div>'});
+  if(!C.length)html+='<div class="vac">No hay cursos enviados todavía.</div>';
+  html+='</div><div class="card"><div class="h">Necesitan atención (trimestre actual)</div>';
+  var L=[];C.forEach(function(c){c.e.forEach(function(E,i){var p=t2(E.pr),n=E.pe.filter(function(x){return x.st!=='REC'&&x.st!=='PLAZO'}).length;if((p!=null&&p<min())||n>=3)L.push({c:c,E:E,i:i,p:p,n:n})})});
+  L.sort(function(a,b){return (a.p==null?99:a.p)-(b.p==null?99:b.p)});
+  L.slice(0,40).forEach(function(x){html+='<div class="li" onclick="ir(\'e/'+x.c.id+'/'+x.i+'\')"><div class="x"><b>'+esc(x.E.n)+'</b><small>'+esc(x.c.c)+'</small></div>'+(x.n?'<span class="pill pr">'+x.n+' sin entregar</span> ':'')+'<span class="nota '+cls(x.p)+'">'+f2(x.p)+'</span></div>'});
+  if(!L.length)html+='<div class="vac">Nadie bajo '+min()+' ni con 3 o más trabajos sin entregar. 🎉</div>';
+  html+='</div></div></div>';
+  $('app').innerHTML=html;
+}
+function buscar(){
+  var q=norm($('q').value),out='';
+  if(q.length<2){$('sug').innerHTML='';return}
+  var ps=q.split(' '),R=[];
+  cursos().forEach(function(c){c.e.forEach(function(E,i){var n=norm(E.n);if(ps.every(function(p){return n.indexOf(p)>=0}))R.push({c:c,E:E,i:i})})});
+  R.slice(0,30).forEach(function(x){out+='<div class="li" onclick="ir(\'e/'+x.c.id+'/'+x.i+'\')"><div class="x"><b>'+esc(x.E.n)+'</b><small>'+esc(x.c.c)+'</small></div><span class="nota '+cls(x.E.pr)+'">'+f2(x.E.pr)+'</span></div>'});
+  $('sug').innerHTML=R.length?'<div class="sug">'+out+'</div>':'<div class="sug"><div class="vac">No encontré a nadie con «'+esc($('q').value)+'».</div></div>';
+}
+
+/* ───────── FICHA DEL ESTUDIANTE ───────── */
+function verEst(C,i,tsel){
+  var E=C.e[i];if(!E)return inicio();
+  var ta=trimAct(C),t=tsel==='A'?'A':Number(tsel||ta);
+  $('tt').textContent=E.n;
+  var h='<div class="wrap"><div class="muted noprint" style="margin-bottom:6px"><a href="#c/'+C.id+'">← '+esc(C.c)+'</a></div>';
+  h+='<div class="card"><div style="font-size:18px;font-weight:bold">'+esc(E.n)+'</div><div class="muted">'+esc(C.c)+(E.r?' · Representante: '+esc(E.r)+(E.p?' ('+esc(E.p)+')':''):'')+'</div></div>';
+  var pend=E.pe.filter(function(x){return x.st!=='REC'}),A=E.A;
+  h+='<div class="kp"><div><b class="'+cls(E.pr)+'">'+f2(E.pr)+'</b><span>Promedio '+ord(ta)+' trim.</span></div><div><b class="'+(pend.length?'rojo':'ok')+'">'+pend.length+'</b><span>Trabajos pendientes</span></div>'+
+     '<div><b>'+(A&&A.pct!=null?Math.round(A.pct*100)+' %':'—')+'</b><span>Asistencia'+(A?' · '+A.f+' faltas':'')+'</span></div><div><b class="'+(E.cp.length?'rojo':'ok')+'">'+E.cp.length+'</b><span>Reportes de comportamiento</span></div></div>';
+  h+='<div class="acts"><button class="btn bp" onclick="window.print()">🖨️ Imprimir o guardar PDF</button><button class="btn bw" onclick="whats(\''+C.id+'\','+i+')">WhatsApp (elige el contacto)</button><button class="btn bo" onclick="copiar(\''+C.id+'\','+i+')">📋 Copiar resumen</button></div>';
+  // notas por asignatura
+  h+='<div class="card"><div class="h">Calificaciones</div><div class="seg noprint">'+[1,2,3].map(function(n){return '<button class="'+(t===n?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/'+n+'\')">'+ord(n)+' trim.</button>'}).join('')+'<button class="'+(t==='A'?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/A\')">Año</button></div>';
+  if(t==='A'){
+    h+='<div class="tw"><table><tr><th>Asignatura</th><th class="c">1.er</th><th class="c">2.º</th><th class="c">3.er</th><th class="c">Promedio</th></tr>';
+    E.g.forEach(function(g){var a=anual(g);h+='<tr><td>'+esc(g.a)+'</td>'+[1,2,3].map(function(n){var v=totTrim(g,n);return '<td class="c '+cls(v)+'">'+f2(v)+'</td>'}).join('')+'<td class="c nota '+cls(a)+'">'+f2(a)+'</td></tr>'});
+    h+='</table></div><div class="muted" style="margin-top:6px">Si un trimestre aún no tiene examen y proyecto, se toma el promedio de aportes (parcial).</div>';
+  }else{
+    h+='<div class="tw"><table><tr><th>Asignatura</th><th class="c hm">Aportes</th><th class="c">70 %</th><th class="c hm">Examen</th><th class="c hm">Proyecto</th><th class="c">30 %</th><th class="c">Total</th><th class="c hm">Cualit.</th></tr>';
+    E.g.forEach(function(g){var T=tDe(g,t);
+      if(!T||!T.enc){h+='<tr><td>'+esc(g.a)+'</td><td colspan="7" class="muted">'+(g.hay?'Sin datos en este trimestre':'Sin cuadro vinculado')+'</td></tr>';return}
+      h+='<tr><td>'+esc(g.a)+'</td><td class="c hm">'+f2(T.pf)+'</td><td class="c">'+f2(T.f70)+'</td><td class="c hm">'+f2(T.ex)+'</td><td class="c hm">'+f2(T.pr)+'</td><td class="c">'+f2(T.s30)+'</td><td class="c nota '+cls(T.tot)+'">'+f2(T.tot)+'</td><td class="c hm">'+esc(T.cu||T.es||'—')+'</td></tr>'});
+    h+='</table></div>';
+  }
+  h+='</div>';
+  // pendientes
+  h+='<div class="card"><div class="h">Trabajos pendientes · '+ord(ta)+' trimestre</div>';
+  if(!E.pe.length)h+='<div class="vac" style="padding:12px">No tiene trabajos pendientes. ✅</div>';
+  E.pe.forEach(function(p){var s=PEN[p.st]||['','pg'];h+='<div class="li" style="cursor:default"><div class="x"><b>'+esc(p.t)+'</b><small>'+esc(p.a)+' · '+esc(p.c)+(p.ent?' · entrega '+fc(p.ent):'')+(p.h&&p.st==='PLAZO'?' · puede entregarla hasta el '+fc(p.h):'')+'</small></div><span class="pill '+s[1]+'">'+s[0]+'</span></div>'});
+  h+='</div>';
+  // detalle por asignatura
+  if(t!=='A'){h+='<div class="card"><div class="h">Detalle de actividades · '+ord(t)+' trimestre</div>';
+    E.g.forEach(function(g){var T=tDe(g,t);if(!T||!T.it.length)return;var ne=T.it.filter(function(x){return x[4]==='NE'}).length;
+      h+='<details class="det"><summary><span>'+esc(g.a)+'</span><span>'+(ne?'<span class="pill pr">'+ne+' no entregó</span> ':'')+'<span class="muted">'+T.it.length+' actividades ▾</span></span></summary><div class="tw"><table><tr><th>Actividad</th><th class="c">Entrega</th><th class="c">Estado</th><th class="c">Nota</th></tr>';
+      T.it.forEach(function(x){var s=EST[x[4]]||EST.OTRO;h+='<tr><td><b>'+esc(x[2])+'</b><br><span class="muted">'+esc(x[0])+(x[1]?' · Insumo '+esc(x[1]):'')+'</span></td><td class="c">'+(fc(x[3])||'—')+'</td><td class="c"><span class="pill '+s[1]+'">'+s[0]+'</span></td><td class="c nota '+(x[4]==='NE'?'rojo':cls(x[5]))+'">'+(x[5]!=null?f2(x[5]):esc(x[6]||'—'))+'</td></tr>'});
+      h+='</table></div></details>'});
+    h+='</div>'}
+  // asistencia
+  if(A){h+='<div class="card"><div class="h">Asistencia del año</div><div class="tw"><table><tr><th>Mes</th><th class="c">Asistió</th><th class="c">Faltas</th><th class="c">Justificadas</th></tr>'+
+    A.m.map(function(m){return '<tr><td>'+esc(m[0])+'</td><td class="c">'+m[1]+'</td><td class="c '+(m[2]?'rojo':'')+'">'+m[2]+'</td><td class="c">'+m[3]+'</td></tr>'}).join('')+'</table></div>'+
+    (A.fl.length?'<div class="muted" style="margin-top:6px">Faltas: '+A.fl.map(fc).join(', ')+'</div>':'')+'</div>'}
+  // comportamiento y citaciones
+  if(E.cp.length||E.ct.length){h+='<div class="card"><div class="h">Comportamiento y citaciones</div>';
+    E.cp.forEach(function(x){h+='<div class="li" style="cursor:default"><div class="x"><b>'+esc(x.x)+'</b><small>'+fc(x.f)+(x.m?' · '+esc(x.m):'')+'</small></div><span class="pill pa">'+esc(x.nv||'')+'</span></div>'});
+    E.ct.forEach(function(x){h+='<div class="li" style="cursor:default"><div class="x"><b>'+esc(x.tp==='CITACION'?'Citación':'Comunicado')+': '+esc(x.as||'')+'</b><small>'+fc(x.f)+(x.r?' · '+esc(x.r):'')+'</small></div></div>'});
+    h+='</div>'}
+  h+='<div class="muted" style="text-align:center;margin:10px 0 30px">Registro personal del docente · datos de '+esc(fc(C.f))+' '+esc(C.h)+'</div></div>';
+  $('app').innerHTML=h;
+}
+function textoResumen(C,E){
+  var ta=trimAct(C),l=['*'+E.n+'* · '+C.c,'Promedio del '+ord(ta)+' trimestre: *'+f2(E.pr)+'*',''];
+  E.g.forEach(function(g){var T=tDe(g,ta);if(T&&T.enc)l.push('• '+g.a+': '+f2(T.tot!=null?T.tot:T.pf)+(T.tot==null?' (parcial)':''))});
+  var p=E.pe.filter(function(x){return x.st!=='REC'});
+  if(p.length){l.push('','Trabajos pendientes:');p.forEach(function(x){l.push('• '+x.t+' ('+x.a+')'+(x.st==='PLAZO'&&x.h?' — puede entregarla hasta el '+fc(x.h):''))})}
+  else l.push('','No tiene trabajos pendientes. ✅');
+  if(E.A&&E.A.pct!=null)l.push('','Asistencia: '+Math.round(E.A.pct*100)+' % ('+E.A.f+' faltas)');
+  return l.join('\n');
+}
+function whats(cid,i){var C=DB.cursos[cid];window.open('https://wa.me/?text='+encodeURIComponent(textoResumen(C,C.e[i])),'_blank')}
+function copiar(cid,i){var C=DB.cursos[cid],t=textoResumen(C,C.e[i]);
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast('Resumen copiado.')},function(){toast('No se pudo copiar.')});else toast('No se pudo copiar.')}
+
+/* ───────── CURSO: resumen y mapa de entregas ───────── */
+function verCurso(C,vista,asel,tsel){
+  $('tt').textContent=C.c;
+  var t=trimAct(C),v=vista||'r';
+  var h='<div class="wrap"><div class="seg noprint"><button class="'+(v==='r'?'on':'')+'" onclick="ir(\'c/'+C.id+'/r\')">Resumen del curso</button><button class="'+(v!=='r'?'on':'')+'" onclick="ir(\'c/'+C.id+'/m\')">Mapa de entregas</button></div>';
+  if(v==='r'){
+    var bajo=C.e.filter(function(E){var p=t2(E.pr);return p!=null&&p<min()}).length;
+    h+='<div class="kp"><div><b>'+C.e.length+'</b><span>Estudiantes</span></div><div><b class="rojo">'+bajo+'</b><span>Bajo '+min()+'</span></div><div><b>'+f2(prom(C.e.map(function(E){return E.pr})))+'</b><span>Promedio del curso</span></div></div>';
+    h+='<div class="card"><div class="h">'+ord(t)+' trimestre · total por asignatura</div><div class="tw"><table><tr><th>Estudiante</th>'+C.as.map(function(a){return '<th class="c">'+esc(a)+'</th>'}).join('')+'<th class="c">Promedio</th><th class="c">Pendientes</th></tr>';
+    C.e.map(function(E,i){return {E:E,i:i}}).forEach(function(x){var E=x.E,n=E.pe.filter(function(p){return p.st!=='REC'}).length;
+      h+='<tr style="cursor:pointer" onclick="ir(\'e/'+C.id+'/'+x.i+'\')"><td><b>'+esc(E.n)+'</b></td>'+C.as.map(function(a){var g=E.g.filter(function(y){return y.a===a})[0],T=g?tDe(g,t):null,val=T?(T.tot!=null?T.tot:T.pf):null;return '<td class="c '+cls(val)+'">'+f2(val)+(T&&T.tot==null&&T.pf!=null?'<span class="muted">*</span>':'')+'</td>'}).join('')+
+        '<td class="c nota '+cls(E.pr)+'">'+f2(E.pr)+'</td><td class="c">'+(n?'<span class="pill pr">'+n+'</span>':'—')+'</td></tr>'});
+    h+='</table></div><div class="muted" style="margin-top:6px">* parcial: aún sin examen o proyecto, se muestra el promedio de aportes. Toque un estudiante para ver su ficha.</div></div>';
+  }else{
+    var a=(asel&&C.as.indexOf(asel)>=0)?asel:C.as[0],tm=Number(tsel)||t;window._mapa={id:C.id,a:a,t:tm};
+    h+='<div class="card noprint"><div style="display:flex;gap:8px;flex-wrap:wrap"><div style="flex:2;min-width:180px"><div class="h">Asignatura</div><select onchange="mapaIr(this.value,null)">'+C.as.map(function(x){return '<option'+(x===a?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select></div>'+
+      '<div style="flex:1;min-width:140px"><div class="h">Trimestre</div><select onchange="mapaIr(null,this.value)">'+[1,2,3].map(function(n){return '<option value="'+n+'"'+(n===tm?' selected':'')+'>'+ord(n)+' trimestre</option>'}).join('')+'</select></div></div></div>';
+    var cols=[],key={};C.e.forEach(function(E){var g=E.g.filter(function(y){return y.a===a})[0],T=g?tDe(g,tm):null;if(T)T.it.forEach(function(x){var k=x[0]+'|'+x[1]+'|'+x[2];if(key[k]==null){key[k]=cols.length;cols.push({k:k,t:x[2],c:x[0],n:x[1],ent:x[3]})}})});
+    h+='<div class="card"><div class="h">'+esc(a)+' · '+ord(tm)+' trimestre</div>';
+    if(!cols.length)h+='<div class="vac">No hay actividades registradas.</div>';
+    else{h+='<div class="tw"><table class="mapa"><tr><th style="text-align:left">Estudiante</th>'+cols.map(function(c,j){return '<th title="'+esc(c.t)+'">'+(j+1)+'</th>'}).join('')+'<th>NE</th></tr>';
+      C.e.forEach(function(E,i){var g=E.g.filter(function(y){return y.a===a})[0],T=g?tDe(g,tm):null,m={},ne=0;if(T)T.it.forEach(function(x){m[x[0]+'|'+x[1]+'|'+x[2]]=x;if(x[4]==='NE')ne++});
+        h+='<tr><td class="n"><a href="#e/'+C.id+'/'+i+'/'+tm+'">'+esc(E.n)+'</a></td>'+cols.map(function(c){var x=m[c.k];if(!x)return '<td><span class="sq sX"></span></td>';var tx=x[4]==='OK'&&x[5]!=null?String(Math.floor(x[5])):(x[4]==='NE'?'✗':x[4]==='INA'?'I':'');return '<td><span class="sq s'+x[4]+'" title="'+esc(c.t+': '+(EST[x[4]]||EST.OTRO)[0]+(x[5]!=null?' · '+f2(x[5]):''))+'">'+tx+'</span></td>'}).join('')+'<td class="'+(ne?'rojo':'')+'">'+ne+'</td></tr>'});
+      h+='</table></div><div class="muted" style="margin-top:8px"><span class="sq sOK"></span> entregó (nota) · <span class="sq sNE">✗</span> no entregó · <span class="sq sINA">I</span> inasistencia · <span class="sq sPEND"></span> por entregar o sin calificar</div>';
+      h+='<div style="margin-top:8px">'+cols.map(function(c,j){return '<div class="muted"><b>'+(j+1)+'.</b> '+esc(c.t)+(c.ent?' · '+fc(c.ent):'')+'</div>'}).join('')+'</div>'}
+    h+='</div>';
+  }
+  h+='</div>';$('app').innerHTML=h;
+}
+function mapaIr(a,t){var M=window._mapa;ir('c/'+M.id+'/m/'+encodeURIComponent(a!=null?a:M.a)+'/'+(t!=null?t:M.t))}
+function prom(a){var v=a.map(t2).filter(function(n){return n!=null});return v.length?v.reduce(function(s,n){return s+n},0)/v.length:null}
+
+/* ───────── arranque ───────── */
+function arrancar(){
+  vigilarInactividad();
+  if(CFG.demo){USER={demo:true};$('app').innerHTML='';actualizar(false);return}
+  if(!CFG.apiKey){$('app').innerHTML='<div class="wrap"><div class="card vac">Falta el archivo <b>config.js</b>. Descárguelo desde su sistema (🌐 Página web rápida › paso 6) y súbalo junto a esta página.</div></div>';return}
+  var c=leerCache();
+  if(c){DB=c;encabezado();ruta()}   // se ve al instante con lo último guardado; luego se actualiza
+  else $('app').innerHTML='<div class="vac">Cargando…</div>';
+  cargarFirebase().then(function(F){
+    F.A.onAuthStateChanged(F.auth,function(u){
+      if(!u){DB=null;try{localStorage.removeItem(LS_D)}catch(e){}pantallaLogin();return}
+      if(CFG.docente&&String(u.email||'').toLowerCase()!==String(CFG.docente).toLowerCase()){
+        F.A.signOut(F.auth);pantallaLogin('La cuenta '+u.email+' no está autorizada. Entre con '+CFG.docente+'.');return}
+      USER=u;ultimoUso=Date.now();actualizar(false);
+    });
+  }).catch(function(){if(!DB)$('app').innerHTML='<div class="wrap"><div class="card vac">No se pudo cargar el inicio de sesión. Revise su internet.</div></div>'});
+}
+arrancar();
+</script>
+</body></html>
