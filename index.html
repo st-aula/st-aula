@@ -233,7 +233,11 @@ function verEst(C,i,tsel){
   var pend=E.pe.filter(function(x){return x.st!=='REC'}),A=E.A;
   h+='<div class="kp"><div><b class="'+cls(E.pr)+'">'+f2(E.pr)+'</b><span>Promedio '+ord(ta)+' trim.</span></div><div><b class="'+(pend.length?'rojo':'ok')+'">'+pend.length+'</b><span>Trabajos pendientes</span></div>'+
      '<div><b>'+(A&&A.pct!=null?Math.round(A.pct*100)+' %':'—')+'</b><span>Asistencia'+(A?' · '+A.f+' faltas':'')+'</span></div><div><b class="'+(E.cp.length?'rojo':'ok')+'">'+E.cp.length+'</b><span>Reportes de comportamiento</span></div></div>';
-  h+='<div class="acts"><button class="btn bp" onclick="window.print()">🖨️ Imprimir o guardar PDF</button><button class="btn bw" onclick="whats(\''+C.id+'\','+i+')">WhatsApp (elige el contacto)</button><button class="btn bo" onclick="copiar(\''+C.id+'\','+i+')">📋 Copiar resumen</button></div>';
+  h+='<div class="card noprint" style="padding:10px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="asR" style="flex:2;min-width:180px;font-size:14px;padding:9px"><option value="TODAS">Todas mis asignaturas</option>'+E.g.map(function(g){return '<option value="'+esc(g.a)+'">'+esc(g.a)+'</option>'}).join('')+'</select>'+
+    '<button class="btn bp" style="flex:1;min-width:160px" onclick="informe(\''+C.id+'\','+i+',\''+(t==='A'?'TODO':t)+'\')">📄 Informe completo</button></div>'+
+    '<div class="muted" style="margin-top:4px">Formato oficial de «Consultar estudiante» · período: '+(t==='A'?'todo el año':ord(t)+' trimestre')+' (se cambia en Calificaciones, más abajo)</div>'+
+    '<div class="acts" style="margin:8px 0 0"><button class="btn bo" onclick="app(\'jue\',\''+C.id+'\','+i+')">🗓️ Informe del jueves</button><button class="btn bw" onclick="app(\'wa\',\''+C.id+'\','+i+')">WhatsApp al representante</button><button class="btn bo" onclick="copiar(\''+C.id+'\','+i+')">📋 Copiar resumen</button></div>'+
+    '<div class="muted" style="margin-top:4px">Estos botones abren su sistema en otra pestaña y tardan unos segundos (arma el documento oficial o busca el número del representante).</div></div>';
   // notas por asignatura
   h+='<div class="card"><div class="h">Calificaciones</div><div class="seg noprint">'+[1,2,3].map(function(n){return '<button class="'+(t===n?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/'+n+'\')">'+ord(n)+' trim.</button>'}).join('')+'<button class="'+(t==='A'?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/A\')">Año</button></div>';
   if(t==='A'){
@@ -281,7 +285,9 @@ function textoResumen(C,E){
   if(E.A&&E.A.pct!=null)l.push('','Asistencia: '+Math.round(E.A.pct*100)+' % ('+E.A.f+' faltas)');
   return l.join('\n');
 }
-function whats(cid,i){var C=DB.cursos[cid];window.open('https://wa.me/?text='+encodeURIComponent(textoResumen(C,C.e[i])),'_blank')}
+function urlApp(q){var u=DB&&DB.meta&&DB.meta.app;if(!u){toast('Falta el enlace de su app. Abra una vez su app del celular y vuelva a «Enviar todos mis cursos» en el sistema.',7000);return null}return u+(u.indexOf('?')>=0?'&':'?')+q}
+function app(acc,cid,i){var C=DB.cursos[cid],E=C.e[i],u=urlApp('web='+acc+'&c='+encodeURIComponent(C.c)+'&n='+encodeURIComponent(E.n));if(!u)return;window.open(u,'_blank');toast(acc==='wa'?'Abriendo su sistema para buscar el número…':'Abriendo el informe en otra pestaña…')}
+function informe(cid,i,per){var C=DB.cursos[cid],E=C.e[i],a=$('asR')?$('asR').value:'TODAS',u=urlApp('web=rep&c='+encodeURIComponent(C.c)+'&n='+encodeURIComponent(E.n)+'&a='+encodeURIComponent(a)+'&p='+encodeURIComponent(per));if(!u)return;window.open(u,'_blank');toast('Abriendo el informe en otra pestaña…')}
 function copiar(cid,i){var C=DB.cursos[cid],t=textoResumen(C,C.e[i]);
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast('Resumen copiado.')},function(){toast('No se pudo copiar.')});else toast('No se pudo copiar.')}
 
