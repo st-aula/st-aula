@@ -286,8 +286,9 @@ function textoResumen(C,E){
   return l.join('\n');
 }
 function urlApp(q){var u=DB&&DB.meta&&DB.meta.app;if(!u){toast('Falta el enlace de su app. Abra una vez su app del celular y vuelva a «Enviar todos mis cursos» en el sistema.',7000);return null}return u+(u.indexOf('?')>=0?'&':'?')+q}
-function app(acc,cid,i){var C=DB.cursos[cid],E=C.e[i],u=urlApp('web='+acc+'&c='+encodeURIComponent(C.c)+'&n='+encodeURIComponent(E.n));if(!u)return;window.open(u,'_blank');toast(acc==='wa'?'Abriendo su sistema para buscar el número…':'Abriendo el informe en otra pestaña…')}
-function informe(cid,i,per){var C=DB.cursos[cid],E=C.e[i],a=$('asR')?$('asR').value:'TODAS',u=urlApp('web=rep&c='+encodeURIComponent(C.c)+'&n='+encodeURIComponent(E.n)+'&a='+encodeURIComponent(a)+'&p='+encodeURIComponent(per));if(!u)return;window.open(u,'_blank');toast('Abriendo el informe en otra pestaña…')}
+function b64u(t){var b=new TextEncoder().encode(String(t)),x='';for(var i=0;i<b.length;i++)x+=String.fromCharCode(b[i]);return btoa(x).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function app(acc,cid,i){var C=DB.cursos[cid],E=C.e[i],u=urlApp('web='+acc+'&c64='+b64u(C.c)+'&n64='+b64u(E.n));if(!u)return;window.open(u,'_blank');toast(acc==='wa'?'Abriendo su sistema para buscar el número…':'Abriendo el informe en otra pestaña…')}
+function informe(cid,i,per){var C=DB.cursos[cid],E=C.e[i],a=$('asR')?$('asR').value:'TODAS',u=urlApp('web=rep&c64='+b64u(C.c)+'&n64='+b64u(E.n)+'&a64='+b64u(a)+'&p='+encodeURIComponent(per));if(!u)return;window.open(u,'_blank');toast('Abriendo el informe en otra pestaña…')}
 function copiar(cid,i){var C=DB.cursos[cid],t=textoResumen(C,C.e[i]);
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){toast('Resumen copiado.')},function(){toast('No se pudo copiar.')});else toast('No se pudo copiar.')}
 
