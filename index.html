@@ -117,9 +117,23 @@ body.in #bInicio{display:none}
 }
 @media print{.side,.bnav,.hero{display:none!important}body.in{padding:0!important}.ehead{display:none}.ecard{margin-top:0}}
 
+
+/* ── buscador permanente ── */
+.top .gq{position:relative;flex:0 1 400px;min-width:170px}
+.top .gq input{width:100%;height:38px;border:0;border-radius:999px;padding:0 14px 0 36px;font-size:16px;background:#fff;color:#0B2545;font-family:inherit;margin:0;box-shadow:none}
+.top .gq input:focus{outline:3px solid #FFC000;outline-offset:1px}
+.top .gqi{position:absolute;left:12px;top:9px;font-size:15px;pointer-events:none}
+.gqr{position:absolute;left:0;right:0;top:44px;background:#fff;color:#0B2545;border:1px solid #E1E8F4;border-radius:14px;box-shadow:0 10px 30px rgba(11,37,69,.22);max-height:62vh;overflow:auto;z-index:40;font-weight:normal}
+.gqr a{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #EEF1F6;color:#0B2545;text-decoration:none;cursor:pointer;font-size:14.5px}
+.gqr a:first-child{border-top:0}.gqr a.on,.gqr a:hover{background:#EEF3FB}
+.gqr a b{font-weight:bold}.gqr a small{color:#5B6577;white-space:nowrap;font-size:12.5px}
+.gqr .gqv{padding:12px 14px;color:#5B6577;font-size:14px}
+@media (max-width:899px){.top{flex-wrap:wrap}.top .gq{order:10;flex:1 1 100%;min-width:0}}
+@media print{.gq{display:none!important}}
 </style>
 </head><body>
 <div class="top" id="top" style="display:none"><div class="t"><span id="tt">Reportes</span><div class="s" id="ts"></div></div>
+<div class="gq noprint" id="gqBox" role="search"><span class="gqi" aria-hidden="true">🔎</span><input id="gq" type="search" placeholder="Buscar estudiante (nombre o apellido)…" autocomplete="off" spellcheck="false" aria-label="Buscar estudiante en todos sus cursos" aria-controls="gqR"><div class="gqr" id="gqR" role="listbox" hidden></div></div>
 <button id="bInicio" onclick="ir('')" title="Inicio">⌂</button><button class="y" id="bAct" onclick="actualizar(true)">Actualizar</button><button onclick="salir()">Salir</button></div>
 <nav class="side noprint" id="side"></nav><nav class="bnav noprint" id="bnav"></nav>
 <div id="app"><div class="vac">Cargando…</div></div>
@@ -914,5 +928,44 @@ function arrancar(){
   }).catch(function(){if(!DB)$('app').innerHTML='<div class="wrap"><div class="card vac">No se pudo cargar el inicio de sesión. Revise su internet.</div></div>'});
 }
 arrancar();
+</script>
+<script>
+/* ── buscador permanente de estudiantes (todos los cursos) ── */
+(function(){
+  var IDX=null,IDB=null,SEL=-1,RES=[];
+  function nrm(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9ñ ]+/g,' ').replace(/\s+/g,' ').trim()}
+  function indice(){
+    if(IDX&&IDB===DB)return IDX;IDX=[];IDB=DB;if(!DB||!DB.cursos)return IDX;
+    cursos().forEach(function(C){(C.e||[]).forEach(function(E,i){IDX.push({n:E.n,k:nrm(E.n),c:C.c,id:C.id,i:i})})});
+    return IDX}
+  function buscar(t){
+    var p=nrm(t).split(' ').filter(Boolean);if(!p.length)return [];
+    return indice().filter(function(x){return p.every(function(w){return x.k.indexOf(w)>=0})})
+      .map(function(x){var pal=x.k.split(' '),s=0;p.forEach(function(w){if(pal.some(function(z){return z.indexOf(w)===0}))s++});return {x:x,s:s}})
+      .sort(function(a,b){return b.s-a.s||(a.x.k<b.x.k?-1:a.x.k>b.x.k?1:0)}).slice(0,15).map(function(o){return o.x})}
+  function caja(){return document.getElementById('gqR')}
+  function cerrar(){var r=caja();if(r){r.hidden=true;r.innerHTML=''}SEL=-1;RES=[]}
+  function pintar(){
+    var r=caja(),q=document.getElementById('gq');if(!r||!q)return;
+    if(nrm(q.value).length<2){cerrar();return}
+    RES=buscar(q.value);if(SEL>=RES.length)SEL=RES.length-1;
+    r.innerHTML=RES.length?RES.map(function(x,j){return '<a role="option" data-j="'+j+'" class="'+(j===SEL?'on':'')+'"><b>'+esc(x.n)+'</b><small>'+esc(x.c)+'</small></a>'}).join(''):'<div class="gqv">Sin coincidencias</div>';
+    r.hidden=false}
+  function abrir(j){var x=RES[j];if(!x)return;var q=document.getElementById('gq');q.value='';cerrar();q.blur();ir('e/'+x.id+'/'+x.i)}
+  document.addEventListener('input',function(e){if(e.target&&e.target.id==='gq'){SEL=-1;pintar()}});
+  document.addEventListener('keydown',function(e){
+    if(!e.target||e.target.id!=='gq')return;
+    if(e.key==='ArrowDown'){e.preventDefault();if(RES.length){SEL=(SEL+1)%RES.length;pintar()}}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(RES.length){SEL=SEL<=0?RES.length-1:SEL-1;pintar()}}
+    else if(e.key==='Enter'){e.preventDefault();if(RES.length)abrir(SEL<0?0:SEL)}
+    else if(e.key==='Escape'){e.target.value='';cerrar()}});
+  document.addEventListener('mousedown',function(e){
+    var a=e.target&&e.target.closest?e.target.closest('#gqR a'):null;
+    if(a){e.preventDefault();abrir(Number(a.getAttribute('data-j')));return}
+    if(!(e.target&&e.target.closest&&e.target.closest('#gqBox')))cerrar()});
+  document.addEventListener('click',function(e){var a=e.target&&e.target.closest?e.target.closest('#gqR a'):null;if(a){e.preventDefault();abrir(Number(a.getAttribute('data-j')))}});
+  document.addEventListener('focusin',function(e){if(e.target&&e.target.id==='gq')pintar()});
+  window.addEventListener('hashchange',cerrar);
+})();
 </script>
 </body></html>
