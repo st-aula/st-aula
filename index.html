@@ -126,6 +126,7 @@ body.in #bInicio{display:none}
 <div class="load" id="load"><div class="spin"></div><div id="loadT">Cargando…</div></div>
 <div class="toast" id="toast"></div>
 <script src="config.js"></script>
+<script src="config_biblioteca.js"></script>
 <script>
 "use strict";
 var CFG = window.CACHA_CONFIG || {};
@@ -270,6 +271,7 @@ function ruta(){
   if(h[0]==='rub')return verRubrica();
   if(h[0]==='cursos')return verCursos();
   if(h[0]==='cambios')return verCambios();
+  if(h[0]==='bib'&&window.verBiblioteca)return verBiblioteca(h[1]);
   if(h[0]==='r'&&DB.cursos[h[1]])return verReporte(DB.cursos[h[1]],Number(h[2]),h[3]||'comp',h[4]||'TODAS',h[5]||String(trimAct(DB.cursos[h[1]])));
   if(h[0]==='c'&&DB.cursos[h[1]])return verCurso(DB.cursos[h[1]],h[2],h[3],h[4]);
   inicio();
@@ -281,14 +283,15 @@ var ICO={home:'<path d="M5 12H3l9-9 9 9h-2"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2
  pencil:'<path d="M4 20h4L18.5 9.5a2.83 2.83 0 1 0-4-4L4 16v4"/><path d="m13.5 6.5 4 4"/>',list:'<path d="m3.5 5.5 1.5 1.5 2.5-2.5"/><path d="m3.5 11.5 1.5 1.5 2.5-2.5"/><path d="m3.5 17.5 1.5 1.5 2.5-2.5"/><path d="M11 6h9M11 12h9M11 18h9"/>',
  trend:'<path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/>',clip:'<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/>',
  bell:'<path d="M10 5a2 2 0 1 1 4 0 7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/>',plus:'<path d="M12 5v14M5 12h14"/>',
- check:'<circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/>'};
+ check:'<circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/>',
+ book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M6.5 17A2.5 2.5 0 0 0 4 19.5 2.5 2.5 0 0 0 6.5 22H20v-5"/>'};
 function ic(n){return '<svg class="svg" viewBox="0 0 24 24" aria-hidden="true">'+(ICO[n]||'')+'</svg>'}
 function nCasos(){var G=DB&&DB.glob&&DB.glob.casos;if(!G)return 0;return (G.lista||[]).filter(function(c){return c.vencido||c.etapa==='ENVIAR'}).length}
 function nCambios(){try{return colaPend().length}catch(e){return 0}}
 function navPintar(){
-  if(!DB)return;var r=location.hash.replace(/^#/,'').split('/')[0],k={'':'ini',e:'cur',c:'cur',r:'cur',cursos:'cur',notas:'not',rub:'rub',mej:'mej',casos:'cas',cambios:'cam'}[r]||'';
+  if(!DB)return;var r=location.hash.replace(/^#/,'').split('/')[0],k={'':'ini',e:'cur',c:'cur',r:'cur',cursos:'cur',notas:'not',rub:'rub',mej:'mej',casos:'cas',cambios:'cam',bib:'bib'}[r]||'';
   var nc=nCasos(),np=nCambios(),bd=function(n){return n?'<i class="bdg">'+n+'</i>':''};
-  var it=[['ini','','home','Inicio'],['cur','cursos','school','Cursos'],['not','notas','pencil','Registrar notas'],['rub','rub','list','Calificar con rúbrica'],['mej','mej','trend','Mejoras'],['cas','casos','clip','Mis casos',nc],['cam','cambios','bell','Cambios enviados',np]];
+  var it=[['ini','','home','Inicio'],['cur','cursos','school','Cursos'],['not','notas','pencil','Registrar notas'],['rub','rub','list','Calificar con rúbrica'],['mej','mej','trend','Mejoras'],['cas','casos','clip','Mis casos',nc],['cam','cambios','bell','Cambios enviados',np]];if(window.verBiblioteca)it.push(['bib','bib','book','Biblioteca']);
   var m=DB.meta||{},doc=String(m.docente||'Docente'),ini=doc.replace(/^(mgtr|lic|msc|dr|ing)\.?\s+/i,'').split(/\s+/).slice(0,2).map(function(w){return w.charAt(0)}).join('').toUpperCase();
   $('side').innerHTML='<div class="lg"><span class="ini">'+esc(ini||'D')+'</span><div><b>Sistema docente</b><small>'+esc(ultimaHora()||'')+'</small></div></div>'+
     it.map(function(x){return '<a class="'+(k===x[0]?'on':'')+'" onclick="ir(\''+x[1]+'\')">'+ic(x[2])+'<span>'+x[3]+'</span>'+bd(x[4]||0)+'</a>'}).join('');
@@ -350,7 +353,7 @@ function verEst(C,i,tsel){
     '<div class="tags"><span class="pill '+(pend0.length?'pr':'pv')+'">'+pend0.length+' pendiente(s)</span><span class="pill pb">'+(A0&&A0.pct!=null?Math.round(A0.pct*100)+' % asistencia':'Asistencia —')+'</span><span class="pill '+(E.cp.length?'pa':'pv')+'">'+(E.cp.length?E.cp.length+' reporte(s) de conducta':'Sin reportes de conducta')+'</span></div></div>';
   h+=btnReleer(C);
   var pend=E.pe.filter(function(x){return x.st!=='REC'}),A=E.A;
-  h+='<div class="acts noprint"><button class="btn bp" onclick="ir(\'r/'+C.id+'/'+i+'\')">📄 Reporte</button><button class="btn bw" onclick="app(\'wa\',\''+C.id+'\','+i+')">💬 WhatsApp</button></div>'+
+  h+='<div class="acts noprint"><button class="btn bp" onclick="ir(\'r/'+C.id+'/'+i+'\')">📄 Reporte</button><button class="btn bw" onclick="app(\'wa\',\''+C.id+'\','+i+')">💬 WhatsApp</button><button class="btn bo" onclick="if(window.bibEnviar)bibEnviar(\''+C.id+'\','+i+');else toast(\'Falta subir biblioteca_docente.js\')">📲 Enviar a representante</button></div>'+
     '<div class="muted noprint" style="margin:-4px 0 10px;text-align:center">Reporte: al instante · WhatsApp: 2 a 4 s (su sistema busca el número y lo registra)</div>';
   // notas por asignatura
   h+='<div class="card"><div class="h">Calificaciones</div><div class="seg noprint">'+[1,2,3].map(function(n){return '<button class="'+(t===n?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/'+n+'\')">'+ord(n)+' trim.</button>'}).join('')+'<button class="'+(t==='A'?'on':'')+'" onclick="ir(\'e/'+C.id+'/'+i+'/A\')">Año</button></div>';
@@ -915,4 +918,5 @@ function arrancar(){
 }
 arrancar();
 </script>
+<script src="biblioteca_docente.js"></script>
 </body></html>
