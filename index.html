@@ -144,6 +144,9 @@ body.in #bInicio{display:none}
 .pcCr{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;margin-top:6px}
 .pcErr{color:#C00000;font-size:13px;width:100%}
 .pcChk{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:6px;cursor:pointer}.pcChk input{width:18px;height:18px;margin:0}
+.mjK{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 10px}.mjK>div{background:#EEF2F8;border-radius:8px;padding:8px 10px}.mjK small{display:block;color:#5B6B85;font-size:11.5px}.mjK b{font-size:19px;color:#0B3D91}
+.mjA{font-weight:700;color:#0B3D91;margin:8px 0 4px}.mjL{border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:6px}.mjN{white-space:nowrap;font-size:13px}.mjC{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+@media(max-width:560px){.mjK b{font-size:16px}}
 </style>
 </head><body>
 <div class="top" id="top" style="display:none"><div class="t"><span id="tt">Reportes</span><div class="s" id="ts"></div></div>
@@ -399,6 +402,7 @@ function verEst(C,i,tsel){
   if(!E.pe.length)h+='<div class="vac" style="padding:12px">No tiene trabajos pendientes. ✅</div>';
   E.pe.forEach(function(p,pi){var s=PEN[p.st]||['','pg'],pb=window.pcBoton?pcBoton(C,i,p,pi):'';h+='<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x"><b>'+esc(p.t)+'</b><small>'+esc(p.a)+' · '+esc(p.c)+(p.ent?' · entrega '+fc(p.ent):'')+(p.h&&p.st==='PLAZO'?' · puede entregarla hasta el '+fc(p.h):'')+'</small></div>'+(pb.indexOf('pcPor')>=0?'':'<span class="pill '+s[1]+'">'+s[0]+'</span>')+pb+'<div class="pcEd" id="pcEd'+pi+'"></div></div>'});
   h+='</div>';
+  try{h+=mjFicha(C,E,ta)}catch(e){}
   // detalle por asignatura
   if(t!=='A'){h+='<div class="card"><div class="h">Detalle de actividades · '+ord(t)+' trimestre</div>';
     E.g.forEach(function(g){var T=tDe(g,t);if(!T||!T.it.length)return;var ne=T.it.filter(function(x){return x[4]==='NE'}).length;
@@ -539,6 +543,42 @@ function prom(a){var v=a.map(t2).filter(function(n){return n!=null});return v.le
 /* ═════════ MÓDULOS QUE REGISTRAN (mejoras, mis casos, notas, rúbricas) ═════════
    La página NO escribe en los cuadros: deja una ORDEN; su sistema la aplica con sus mismas funciones.
    Los cálculos de esta pantalla usan el MISMO código del sistema (llega en el «kit»). */
+
+
+/* ───────── casos de mejora en proceso (de «Mis casos»): por enviar o en curso, todavía sin nota registrada ───────── */
+function casoEvk(t){var x=KIT.norm_(String(t||'').split(' · evaluación adicional')[0].split(' — ')[0]);return /^PROMEDIO/.test(x)?'PROMEDIO':x}
+function casosAbiertos(curso,asig,est){var G=DB.glob&&DB.glob.casos,L=G&&G.lista||[];return L.filter(function(c){return (c.etapa==='ENVIAR'||c.etapa==='CURSO')&&KIT.norm_(c.curso)===KIT.norm_(curso)&&KIT.norm_(c.est)===KIT.norm_(est)&&(asig==null||KIT.norm_(c.asig)===KIT.norm_(asig))})}
+function casoDetalle(c){return (c.pasos||[]).filter(function(p){return p.e==='ok'||p.e==='esp'||p.e==='mal'}).map(function(p){return p.t+(p.s?' '+p.s:'')}).join(' · ')}
+function casoEtapa(c){return c.etapa==='CURSO'?'🔵 En curso':'🟡 Por enviar'}
+var CASO_T={FORMATIVA:'Formativa',DIRECTA:'Directa',REFUERZO:'Con refuerzo'};
+/* ───────── mejoras del estudiante en su ficha (solo lectura) ───────── */
+function mjFicha(C,E,ta){
+  var k=norm(E.n),num=function(v){var n=Number(String(v==null?'':v).replace(',','.'));return v===''||v==null||isNaN(n)?null:n};
+  var regs=mjRegsDe(C).filter(function(r){return norm(r.estudiante)===k}).map(function(r){return {asig:r.asignatura,trim:String(r.trim),tipo:r.tipo,tipoTxt:r.tipoTxt||'',ev:r.eval||'',fecha:r.fecha||'',ini:num(r.inicial),fin:num(r.final),apl:String(r.aplicada||''),por:false}});
+  var pend=[];try{pend=mjPendientes(C).filter(function(m){return norm(m.estudiante)===k}).map(function(m){return {asig:m.asignatura,trim:String(m.trim),tipo:m.tipo,tipoTxt:{FORMATIVA:'Mejora formativa',DIRECTA:'Mejora directa',REFUERZO:'Mejora con refuerzo'}[m.tipo]||m.tipo,ev:m.eval||'',fecha:'',ini:null,fin:null,apl:'',por:true}})}catch(e){}
+  var cas=[];try{cas=casosAbiertos(C.c,null,E.n).map(function(c){return {asig:c.asig,trim:String(c.trim),tipo:c.tipo,tipoTxt:{FORMATIVA:'Mejora formativa',DIRECTA:'Mejora directa',REFUERZO:'Mejora con refuerzo'}[c.tipo]||c.tipo||'',ev:c.ev||'',fecha:'',ini:null,fin:null,apl:'',por:false,caso:c}})}catch(e){}
+  var L=regs.concat(pend);
+  var asigs=[];(C.rp&&C.rp.as||[]).forEach(function(A){if(asigs.indexOf(A.a)<0)asigs.push(A.a)});L.forEach(function(r){if(asigs.map(norm).indexOf(norm(r.asig))<0)asigs.push(r.asig)});
+  var L2=L.concat(cas),dirTot=L2.filter(function(r){return r.tipo==='DIRECTA'}).length,sube=0;L.forEach(function(r){if(r.ini!=null&&r.fin!=null)sube+=r.fin-r.ini});
+  var h='<div class="card mjF"><div class="h">📈 Mejoras de calificación</div>';
+  h+='<div class="mjK"><div><small>Mejoras registradas</small><b>'+L.length+'</b></div><div><small>Directas en el año</small><b>'+dirTot+' <span class="muted">de 3</span></b></div><div><small>Subió en total</small><b style="color:#0B6E4F">'+(sube>0?'+':'')+f2(Math.round(sube*100)/100)+' <span class="muted">puntos</span></b></div></div>';
+  asigs.forEach(function(a){
+    var R=L2.filter(function(r){return norm(r.asig)===norm(a)}).sort(function(x,y){var d=function(r){var m=String(r.fecha).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return r.trim+(r.por?'9':r.caso?'8':'0')+(m?m[3]+('0'+m[2]).slice(-2)+('0'+m[1]).slice(-2):'')};return d(x).localeCompare(d(y))});
+    h+='<div class="mjA">'+esc(a)+'</div>';
+    if(!R.length)h+='<div class="muted" style="margin:0 0 6px">Sin mejoras en esta asignatura.</div>';
+    else h+='<div class="mjL">'+R.map(function(r){return '<div class="li" style="cursor:default"><div class="x"><b>'+esc(r.ev||'—')+'</b><small>'+(ord(Number(r.trim))||r.trim)+' trimestre · '+esc(r.tipoTxt)+(r.caso&&casoDetalle(r.caso)?' · '+esc(casoDetalle(r.caso)):'')+(r.fecha?' · '+esc(r.fecha):'')+(r.tipo==='DIRECTA'&&norm(r.apl)==='SI'?' · aplicada en el cuadro':'')+'</small></div>'+
+      (r.caso?'<span class="pill pb">'+casoEtapa(r.caso)+'</span>':r.por?'<span class="pill pa">⏳ Por guardar</span>':'<span class="mjN"><span style="color:#B42318">'+f2(r.ini)+'</span> → <b style="color:#0B6E4F">'+f2(r.fin)+'</b></span>')+'</div>'}).join('')+'</div>';
+    var fo=L2.filter(function(r){return norm(r.asig)===norm(a)&&r.tipo==='FORMATIVA'&&r.trim===String(ta)}).length;
+    var foP=cas.filter(function(r){return norm(r.asig)===norm(a)&&r.tipo==='FORMATIVA'&&r.trim===String(ta)}).length;
+    var di=L2.some(function(r){return norm(r.asig)===norm(a)&&r.tipo==='DIRECTA'});
+    var rf=L2.some(function(r){return norm(r.asig)===norm(a)&&r.tipo==='REFUERZO'&&r.trim===String(ta)});
+    var chip=function(c,t){return '<span class="pill '+c+'">'+t+'</span>'};
+    h+='<div class="mjC">'+chip(fo>=2?'pr':fo===1?'pa':'pv','Formativa '+ord(ta)+' trim.: usó '+fo+' de 2'+(foP?' ('+foP+' en proceso)':''))+
+      chip(di?'pr':dirTot>=3?'pr':'pv',di?'Directa: ya usada':dirTot>=3?'Directa: usó las 3 del año':'Directa: disponible')+
+      chip(rf?'pr':'pv','Con refuerzo '+ord(ta)+' trim.: '+(rf?'ya usada':'disponible'))+'</div>';
+  });
+  return h+'</div>';
+}
 /*MJ-INICIO*/
 function mjRegsDe(C){return (C.mj&&C.mj.regs)||[]}
 function mjQ(C,ai,t){var A=C.rp.as[ai];if(!A)return null;for(var k=0;k<A.q.length;k++)if(Number(A.q[k].t)===Number(t))return {A:A,Q:A.q[k],qi:k};return null}
@@ -598,7 +638,7 @@ function rbPrevia(K,C,ai,t,j,calCol){
   var items=[],sin=[];
   C.e.forEach(function(E){var v=mjFila(C,E,ai,x.qi);if(!v)return;var a=v[j];var antes=(a===''||a==null)?'':(typeof a==='number'?Math.round(a*100)/100:String(a));
     var r=por[K.norm_(E.n)];if(!r){sin.push({n:E.n,antes:antes});return}
-    var nota=r.nota,estado='NUEVA';
+    var nota=r.niv==='NO PRESENTÓ'?'NE':r.nota,estado='NUEVA';
     if(antes==='')estado='NUEVA';else if(String(antes)===String(nota))estado='IGUAL';else if(K.norm_(antes)==='NE'||K.norm_(antes)==='INA')estado='MARCA';else estado='YA';
     items.push({n:E.n,nota:nota,antes:antes,estado:estado,atr:r.atr,reg:!!r.reg})});
   return {items:items,sin:sin};
@@ -701,7 +741,8 @@ function mjLista(){
   C.e.forEach(function(E,i){if(q&&norm(E.n).indexOf(q)<0)return;var v=mjFila(C,E,MJ.ai,x.qi);if(!v)return;
     var cols=x.Q.cols,p=cols.total!=null&&KIT.num_(v[cols.total])!=null?KIT.num_(v[cols.total]):(cols.promForm!=null?KIT.num_(v[cols.promForm]):null);
     var n=regs.filter(function(r){return norm(r.estudiante)===norm(E.n)&&r.asignatura===x.A.a&&String(r.trim)===String(MJ.t)}).length;
-    h+='<div class="li" onclick="mjAbrir('+i+')"><div class="x"><b>'+esc(E.n)+'</b><small>'+(n?n+' mejora(s) en este trimestre':'Sin mejoras en este trimestre')+'</small></div><span class="nota '+cls(p)+'">'+f2(p)+'</span></div>'});
+    var ca=0;try{ca=casosAbiertos(C.c,x.A.a,E.n).filter(function(c){return String(c.trim)===String(MJ.t)}).length}catch(e){}
+    h+='<div class="li" onclick="mjAbrir('+i+')"><div class="x"><b>'+esc(E.n)+'</b><small>'+(n?n+' mejora(s) en este trimestre':'Sin mejoras en este trimestre')+'</small></div>'+(ca?'<span class="pill pb mjCasoL">📋 Caso en proceso</span>':'')+'<span class="nota '+cls(p)+'">'+f2(p)+'</span></div>'});
   $('mjL').innerHTML='<div class="card">'+(h||'<div class="vac">Sin estudiantes.</div>')+'</div>';
 }
 function mjHoy(){
@@ -753,6 +794,8 @@ function mjResultado(){
   else{
     h+='<div class="r2" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #EEF1F6"><span>'+esc(R.etiqueta)+'</span><span>Nota actual: <b>'+f2(R.inicial)+'</b></span></div>';
     if(R.dup)h+='<div class="ban a">'+esc(R.dup)+' Si la guarda igual, su sistema la registrará «de todas formas».</div>';
+    try{var cz=casosAbiertos(C.c,C.rp.as[MJ.ai].a,C.e[MJ.i].n).filter(function(c){return String(c.trim)===String(MJ.t)&&c.evk===casoEvk(R.etiqueta)});
+      cz.forEach(function(c){h+='<div class="ban a mjCaso">⚠️ <b>Ya tiene un caso de mejora en proceso para esta evaluación.</b><br>'+esc(CASO_T[c.tipo]||c.tipo||'')+' · '+casoEtapa(c)+(casoDetalle(c)?' · '+esc(casoDetalle(c)):'')+'.<br><a href="#casos">📋 Ver en Mis casos</a> antes de generar otra.</div>'})}catch(e){}
     if(!R.r.ok)h+='<div class="ban r">'+esc(R.r.error)+'</div>';
     else if(R.r.pendiente)h+='<div class="muted" style="margin-top:6px">Escriba la nota de la evaluación adicional. Tope de este tipo: '+f2(R.r.tope)+'.</div>';
     else{h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span>Nota final</span><b style="font-size:22px" class="'+cls(R.r.final)+'">'+f2(R.r.inicial)+' → '+f2(R.r.final)+'</b></div><div class="muted">('+f2(R.r.inicial)+' + '+f2(R.r.adicional)+') ÷ 2 = '+f2(R.r.promedio)+(R.r.topeAplicado?' · tope '+f2(R.r.tope):'')+'</div>';
@@ -919,7 +962,7 @@ function rbPasarVer(){var C=DB.cursos[RB.cid];if(RB.j==null)return;
   var P=rbPrevia(KIT,C,RB.ai,RB.t,RB.j,rbCal(C,RB.ai,RB.t,RB.j));
   if(!P.items.length){$('rbP').innerHTML='<div class="card vac">No hay calificaciones con rúbrica en esta actividad.</div>';return}
   var t={NUEVA:['Nueva','pv'],IGUAL:['Ya está igual','pg'],MARCA:['Reemplaza NE/INA','pa'],YA:['Ya tenía otra nota','pr']};
-  $('rbP').innerHTML='<div class="card"><div class="h">Revisión antes de pasar al registro</div>'+P.items.map(function(x,k){return '<div class="li" style="cursor:default"><div class="x"><b>'+esc(x.n)+'</b><small>'+(x.antes!==''?'En el cuadro: '+esc(valTxt(x.antes))+' · ':'')+'Rúbrica: '+(x.nota==='INA'?'INA':f2(KIT.num_(x.nota)))+'</small></div><span class="pill '+t[x.estado][1]+'">'+t[x.estado][0]+'</span>'+(x.estado==='YA'?'<label style="margin-left:6px;font-size:12px"><input type="checkbox" class="rbRep" value="'+esc(x.n)+'"> reemplazar</label>':'')+'</div>'}).join('')+
+  $('rbP').innerHTML='<div class="card"><div class="h">Revisión antes de pasar al registro</div>'+P.items.map(function(x,k){return '<div class="li" style="cursor:default"><div class="x"><b>'+esc(x.n)+'</b><small>'+(x.antes!==''?'En el cuadro: '+esc(valTxt(x.antes))+' · ':'')+'Rúbrica: '+(x.nota==='INA'||x.nota==='NE'?x.nota:f2(KIT.num_(x.nota)))+'</small></div><span class="pill '+t[x.estado][1]+'">'+t[x.estado][0]+'</span>'+(x.estado==='YA'?'<label style="margin-left:6px;font-size:12px"><input type="checkbox" class="rbRep" value="'+esc(x.n)+'"> reemplazar</label>':'')+'</div>'}).join('')+
     (P.sin.length?'<div class="muted" style="margin-top:6px">Sin calificar con rúbrica: '+P.sin.length+'</div>':'')+'<button class="btn bp" style="width:100%;margin-top:8px" onclick="rbPasar()">📥 Pasar al registro</button></div>'}
 function rbPasar(){var C=DB.cursos[RB.cid],rep=[].map.call(document.querySelectorAll('.rbRep:checked'),function(x){return x.value});
   encolar({k:'rub_pasar',o:{curso:C.c,asig:C.rp.as[RB.ai].a,trim:RB.t,j:RB.j,reemplazar:rep}},'Pasar rúbricas al registro',C.c).then(function(){$('rbP').innerHTML=''}).catch(function(e){toast('❌ '+(e.message||e),8000)})}
