@@ -130,6 +130,20 @@ body.in #bInicio{display:none}
 .gqr .gqv{padding:12px 14px;color:#5B6577;font-size:14px}
 @media (max-width:899px){.top{flex-wrap:wrap}.top .gq{order:10;flex:1 1 100%;min-width:0}}
 @media print{.gq{display:none!important}}
+
+/* ── calificar pendientes ── */
+.pcB{background:#0B3D91;color:#fff;border:0;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:bold;cursor:pointer;font-family:inherit;white-space:nowrap}
+.pcEd{width:100%}.pcEd:empty{display:none}
+.pcBox{background:#F6F9FE;border:1.5px solid #D5E0F2;border-radius:14px;padding:12px;margin-top:8px;font-size:14px;color:#0B2545}
+.pcAv{border-radius:10px;padding:8px 10px;font-size:13px;margin-bottom:8px}.pcAv.a{background:#FFF6DD;color:#7A5200;border:1px solid #F3DC8A}.pcAv.r{background:#FFF0F0;color:#9B1C1C;border:1px solid #F5C2C2}.pcAv.b{background:#EEF3FB;color:#0B3D91;border:1px solid #CFDCF3}
+.pcRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.pcBox input[type=text]{width:90px;height:40px;border:1.5px solid #B9C9E6;border-radius:10px;text-align:center;font-size:17px;padding:0 6px;margin:0}
+.pcBox select{width:auto;min-width:120px;height:38px;padding:4px 8px;font-size:14px;margin:0}
+.pcBox button{height:40px;border-radius:10px;font-size:14px;padding:0 14px;cursor:pointer;font-family:inherit;font-weight:bold}
+.pcG{background:#FFC000;color:#3a2a00;border:0}.pcN{background:#fff;border:1.5px solid #0B3D91;color:#0B3D91}.pcC{background:#fff;border:1px solid #D5E0F2;color:#5B6577;font-weight:normal!important}
+.pcCr{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;margin-top:6px}
+.pcErr{color:#C00000;font-size:13px;width:100%}
+.pcChk{display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:6px;cursor:pointer}.pcChk input{width:18px;height:18px;margin:0}
 </style>
 </head><body>
 <div class="top" id="top" style="display:none"><div class="t"><span id="tt">Reportes</span><div class="s" id="ts"></div></div>
@@ -383,7 +397,7 @@ function verEst(C,i,tsel){
   // pendientes
   h+='<div class="card"><div class="h">Trabajos pendientes · '+ord(ta)+' trimestre</div>';
   if(!E.pe.length)h+='<div class="vac" style="padding:12px">No tiene trabajos pendientes. ✅</div>';
-  E.pe.forEach(function(p){var s=PEN[p.st]||['','pg'];h+='<div class="li" style="cursor:default"><div class="x"><b>'+esc(p.t)+'</b><small>'+esc(p.a)+' · '+esc(p.c)+(p.ent?' · entrega '+fc(p.ent):'')+(p.h&&p.st==='PLAZO'?' · puede entregarla hasta el '+fc(p.h):'')+'</small></div><span class="pill '+s[1]+'">'+s[0]+'</span></div>'});
+  E.pe.forEach(function(p,pi){var s=PEN[p.st]||['','pg'],pb=window.pcBoton?pcBoton(C,i,p,pi):'';h+='<div class="li" style="cursor:default;flex-wrap:wrap"><div class="x"><b>'+esc(p.t)+'</b><small>'+esc(p.a)+' · '+esc(p.c)+(p.ent?' · entrega '+fc(p.ent):'')+(p.h&&p.st==='PLAZO'?' · puede entregarla hasta el '+fc(p.h):'')+'</small></div>'+(pb.indexOf('pcPor')>=0?'':'<span class="pill '+s[1]+'">'+s[0]+'</span>')+pb+'<div class="pcEd" id="pcEd'+pi+'"></div></div>'});
   h+='</div>';
   // detalle por asignatura
   if(t!=='A'){h+='<div class="card"><div class="h">Detalle de actividades · '+ord(t)+' trimestre</div>';
@@ -966,6 +980,83 @@ arrancar();
   document.addEventListener('click',function(e){var a=e.target&&e.target.closest?e.target.closest('#gqR a'):null;if(a){e.preventDefault();abrir(Number(a.getAttribute('data-j')))}});
   document.addEventListener('focusin',function(e){if(e.target&&e.target.id==='gq')pintar()});
   window.addEventListener('hashchange',cerrar);
+})();
+</script>
+<script>
+/* ── ✏️ calificar trabajos pendientes desde la ficha (v36_4) ──
+   La nota viaja a su sistema por la cola de siempre; el sistema vuelve a revisar todo antes de escribir. */
+(function(){
+  var ED=null;   // editor abierto: {cid,i,pi,...}
+  function hoyK(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  function diasEntre(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)}
+  function cfgAtr(){var m=DB&&DB.meta||{};return {dias:m.diasAtr!=null?Number(m.diasAtr):2,sobre:m.sobreAtr!=null?Number(m.sobreAtr):((DB.glob&&DB.glob.rub&&DB.glob.rub.sobre)||7)}}
+  function regla(p){if(p.st==='INA')return {tipo:'INA',dias:0};if(!/^\d{4}-\d\d-\d\d$/.test(p.ent||''))return {tipo:'SIN_FECHA',dias:0};
+    var d=diasEntre(p.ent,hoyK());if(d<=0)return {tipo:'A_TIEMPO',dias:0};return {tipo:d<=cfgAtr().dias?'ATRASO':'FUERA',dias:d}}
+  function info(C,p){
+    if(!KIT||!KIT.claveAct_)return null;
+    var ai=C.rp&&C.rp.as?C.rp.as.map(function(a){return a.a}).indexOf(p.a):-1;if(ai<0)return null;
+    var t=trimAct(C),x=mjQ(C,ai,t);if(!x)return null;
+    var k=KIT.claveAct_(C.c,p.a,t,p.c,p.n),col=x.Q.cols.insumos.filter(function(c){return KIT.claveAct_(C.c,p.a,t,KIT.etiquetaComp_(c),c.n)===k})[0];
+    if(!col)return null;
+    var cal=rbCal(C,ai,t,col.j),def=null;
+    if(cal.length&&DB.glob&&DB.glob.rub&&DB.glob.rub.defs){def=DB.glob.rub.defs[cal[0].cod];if(def){def=JSON.parse(JSON.stringify(def));def.id=cal[0].rid}}
+    return {ai:ai,t:t,j:col.j,def:def,rub:cal.length?cal[0].rubrica:''}}
+  function enCola(C,E,p){return COLA.filter(function(o){var q=o.op&&o.op.o;return (o.k==='pend'||o.k==='pend_rub')&&o.est==='PEND'&&q&&q.curso===C.c&&norm(q.est)===norm(E.n)&&norm(q.asig)===norm(p.a)&&norm(q.comp)===norm(p.c)&&String(q.n)===String(p.n)})[0]}
+  window.pcBoton=function(C,i,p,pi){
+    if(p.st==='REC'||!C||!C.e[i])return '';
+    var E=C.e[i],q=enCola(C,E,p);
+    if(q)return '<span class="pill pa pcPor">Por guardar · '+esc(q.label.split(' · ').pop())+'</span>';
+    var I=info(C,p);if(!I)return '';
+    return '<button type="button" class="pcB noprint" onclick="pcAbrir(\''+C.id+'\','+i+','+pi+')">'+(I.def?'📋 Calificar con rúbrica':'✏️ Calificar')+'</button>'};
+  window.pcAbrir=function(cid,i,pi){
+    var C=DB.cursos[cid],E=C&&C.e[i],p=E&&E.pe[pi];if(!p)return;var I=info(C,p);if(!I)return;
+    if(ED){var v=document.getElementById('pcEd'+ED.pi);if(v)v.innerHTML=''}
+    ED={cid:cid,i:i,pi:pi,p:p,I:I,R:regla(p),recibir:false,sobre:null,niv:I.def?I.def.c.map(function(){return null}):[],np:false};
+    var R=ED.R;ED.sobre=R.tipo==='ATRASO'?cfgAtr().sobre:(R.tipo==='FUERA'?cfgAtr().sobre:10);
+    pintar();var n=document.getElementById('pcN');if(n)n.focus()};
+  function maxActual(){var R=ED.R;if(R.tipo==='ATRASO')return cfgAtr().sobre;if(R.tipo==='FUERA'||R.tipo==='INA')return Number(ED.sobre)||10;return 10}
+  function notaRub(){var d=ED.I.def,atr=ED.R.tipo==='ATRASO'||ED.R.tipo==='FUERA';return KIT.rubCalc_(d,ED.niv,ED.np,atr,cfgAtr().sobre)}
+  function pintar(){
+    var v=document.getElementById('pcEd'+ED.pi);if(!v)return;var R=ED.R,A=cfgAtr(),h='<div class="pcBox">';
+    var sob=function(x){return String(x).replace('.',',')};
+    if(R.tipo==='ATRASO')h+='<div class="pcAv a">⏰ Entregó con '+R.dias+' día'+(R.dias===1?'':'s')+' de atraso: se califica <b>sobre '+sob(A.sobre)+'</b> (entrega atrasada).</div>';
+    if(R.tipo==='FUERA'){h+='<div class="pcAv r">⛔ Fuera de plazo ('+R.dias+' días). Por norma ya no se recibe.</div><label class="pcChk"><input type="checkbox" id="pcRec"'+(ED.recibir?' checked':'')+' onchange="pcRecibir(this.checked)"> Recibir de todas formas (pedido del representante o de las autoridades)</label>'}
+    if(R.tipo==='INA')h+='<div class="pcAv b">Faltó ese día (inasistencia). Elija sobre cuánto se califica.</div>';
+    var listo=R.tipo!=='FUERA'||ED.recibir;
+    if(listo&&(R.tipo==='FUERA'||R.tipo==='INA')&&!ED.I.def)h+='<div class="pcRow">Calificar sobre: <select id="pcSob" onchange="pcSobre(this.value)">'+[1,2,3,4,5,6,7,8,9,10].map(function(n){return '<option'+(Number(ED.sobre)===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div>';
+    if(ED.I.def&&listo){
+      var NV=KIT.RUB_NIV_;h+='<div style="font-weight:bold">📋 Rúbrica «'+esc(ED.I.def.t||ED.I.rub)+'» (la misma del curso)</div><div class="pcCr">'+ED.I.def.c.map(function(c,k){
+        var ops=c.b?[[0,'Cumple'],[3,'No cumple']]:[[0,NV[0].t],[1,NV[1].t],[2,NV[2].t],[3,NV[3].t],[4,'Sin evidencia']];
+        return '<span>'+esc(c.t)+'</span><select onchange="pcNivel('+k+',this.value)"><option value="">Elegir…</option>'+ops.map(function(o){return '<option value="'+o[0]+'"'+(ED.niv[k]===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select>'}).join('')+'</div>';
+      var r=notaRub();h+='<label class="pcChk"><input type="checkbox"'+(ED.np?' checked':'')+' onchange="pcNp(this.checked)"> No presentó (nota 0)</label>';
+      h+='<div class="pcRow"><span>Nota: <b id="pcNR">'+(r.incompleto?'faltan '+r.faltan+' criterio(s)':sob(f2(r.nota)))+'</b>'+((R.tipo==='ATRASO'||R.tipo==='FUERA')?' (sobre '+sob(A.sobre)+')':'')+'</span></div>'+
+        '<div class="pcRow"><button type="button" class="pcG" onclick="pcGuardar()">💾 Guardar y pasar al registro</button><button type="button" class="pcC" onclick="pcCerrar()">Cancelar</button><div class="pcErr" id="pcE"></div></div>';
+    }else if(listo){
+      h+='<div class="pcRow">Nota (máx. '+sob(maxActual())+'): <input type="text" id="pcN" inputmode="decimal" placeholder="0 – '+sob(maxActual())+'" onkeydown="if(event.key===\'Enter\')pcGuardar()"><button type="button" class="pcG" onclick="pcGuardar()">💾 Guardar</button><button type="button" class="pcN" onclick="pcGuardar(\'NE\')">NE</button><button type="button" class="pcC" onclick="pcCerrar()">Cancelar</button><div class="pcErr" id="pcE"></div></div>';
+    }else h+='<div class="pcRow"><button type="button" class="pcN" onclick="pcGuardar(\'NE\')">Marcar NE</button><button type="button" class="pcC" onclick="pcCerrar()">Cancelar</button><div class="pcErr" id="pcE"></div></div>';
+    v.innerHTML=h+'<div class="muted" style="margin-top:8px">Se envía a su sistema y llega al cuadro en unos minutos (o con «🔄 Actualizar ahora»).</div></div>'}
+  window.pcRecibir=function(on){ED.recibir=!!on;pintar()};
+  window.pcSobre=function(x){ED.sobre=Number(x);pintar()};
+  window.pcNivel=function(k,x){ED.niv[k]=x===''?null:Number(x);var r=notaRub(),b=document.getElementById('pcNR');if(b)b.textContent=r.incompleto?'faltan '+r.faltan+' criterio(s)':f2(r.nota)};
+  window.pcNp=function(on){ED.np=!!on;pintar()};
+  window.pcCerrar=function(){if(!ED)return;var v=document.getElementById('pcEd'+ED.pi);if(v)v.innerHTML='';ED=null};
+  window.pcGuardar=function(ne){
+    if(!ED)return;var C=DB.cursos[ED.cid],E=C.e[ED.i],p=ED.p,R=ED.R,e=document.getElementById('pcE');
+    var o={curso:C.c,asig:p.a,trim:ED.I.t,comp:p.c,n:p.n,est:E.n,st:p.st,ent:p.ent||'',recibir:!!ED.recibir};
+    if(R.tipo==='FUERA'||R.tipo==='INA')o.sobre=Number(ED.sobre)||10;
+    var op,label;
+    if(ED.I.def&&ne!=='NE'){
+      var r=notaRub();if(r.incompleto){e.textContent='Marque todos los criterios (faltan '+r.faltan+').';return}
+      o.niv=ED.niv;o.np=!!ED.np;o.ina=false;o.obs='';op={k:'pend_rub',o:o};label='Rúbrica · '+E.n+' · '+p.t+' · '+f2(r.nota);
+    }else{
+      var val=ne==='NE'?'NE':(document.getElementById('pcN')||{}).value||'';var rv=KIT.valorNota_(val);
+      if(!rv.ok||rv.v===''||rv.v==='INA'){e.textContent=rv.ok?'Escriba la nota o pulse NE.':rv.error;return}
+      if(typeof rv.v==='number'&&rv.v>maxActual()+1e-9){e.textContent='La nota no puede pasar de '+String(maxActual()).replace('.',',')+'.';return}
+      o.v=rv.v;op={k:'pend',o:o};label='Nota · '+E.n+' · '+p.t+' · '+(typeof rv.v==='number'?f2(rv.v):rv.v);
+    }
+    var cid=ED.cid,i=ED.i;ED=null;
+    encolar(op,label,C.c).then(function(){ruta()}).catch(function(x){toast('❌ '+(x.message||x),8000)})};
+  window.addEventListener('hashchange',function(){ED=null});
 })();
 </script>
 </body></html>
