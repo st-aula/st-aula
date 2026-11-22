@@ -1001,11 +1001,13 @@ arrancar();
     var cal=rbCal(C,ai,t,col.j),def=null;
     if(cal.length&&DB.glob&&DB.glob.rub&&DB.glob.rub.defs){def=DB.glob.rub.defs[cal[0].cod];if(def){def=JSON.parse(JSON.stringify(def));def.id=cal[0].rid}}
     return {ai:ai,t:t,j:col.j,def:def,rub:cal.length?cal[0].rubrica:''}}
-  function enCola(C,E,p){return COLA.filter(function(o){var q=o.op&&o.op.o;return (o.k==='pend'||o.k==='pend_rub')&&o.est==='PEND'&&q&&q.curso===C.c&&norm(q.est)===norm(E.n)&&norm(q.asig)===norm(p.a)&&norm(q.comp)===norm(p.c)&&String(q.n)===String(p.n)})[0]}
+  function datosAntesDe(C,t){var ms=Date.parse(String(C.f||'')+'T'+String(C.h||'00:00').slice(0,5)+':59');return !isNaN(ms)&&ms<t}
+  function enCola(C,E,p){var L=COLA.filter(function(o){var q=o.op&&o.op.o;return (o.k==='pend'||o.k==='pend_rub')&&q&&q.curso===C.c&&norm(q.est)===norm(E.n)&&norm(q.asig)===norm(p.a)&&norm(q.comp)===norm(p.c)&&String(q.n)===String(p.n)});
+    return L.filter(function(o){return o.est==='PEND'})[0]||L.filter(function(o){return o.est==='OK'&&datosAntesDe(C,o.t)})[0]}
   window.pcBoton=function(C,i,p,pi){
     if(p.st==='REC'||!C||!C.e[i])return '';
     var E=C.e[i],q=enCola(C,E,p);
-    if(q)return '<span class="pill pa pcPor">Por guardar · '+esc(q.label.split(' · ').pop())+'</span>';
+    if(q)return q.est==='OK'?'<span class="pill pv pcPor" title="Su sistema ya la guardó en el registro; la página se actualiza en un momento">✅ Calificado · '+esc(q.label.split(' · ').pop())+' · actualizando</span>':'<span class="pill pa pcPor">Por guardar · '+esc(q.label.split(' · ').pop())+'</span>';
     var I=info(C,p);if(!I)return '';
     return '<button type="button" class="pcB noprint" onclick="pcAbrir(\''+C.id+'\','+i+','+pi+')">'+(I.def?'📋 Calificar con rúbrica':'✏️ Calificar')+'</button>'};
   window.pcAbrir=function(cid,i,pi){
