@@ -78,6 +78,23 @@ h2{margin:0 0 12px;font-size:20px;color:var(--az);display:flex;align-items:cente
 .eq:nth-child(2n) button{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.2)}
 .eq.lider{outline:4px solid var(--or);outline-offset:3px}
 .eq:nth-child(2n).lider{outline-color:var(--az)}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:#fff}
+.seg button{border:none;border-radius:0;background:transparent;color:var(--tx2)}
+.seg button.on{background:var(--az);color:#fff}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.ind{position:relative;cursor:pointer;user-select:none;border:1px solid var(--bd);background:#fff;border-radius:16px;padding:12px 14px 10px;transition:transform .08s,box-shadow .15s}
+.ind:hover{box-shadow:0 4px 14px rgba(11,61,145,.12)}.ind:active{transform:scale(.98)}
+.ind .nom{font-weight:700;font-size:15px;line-height:1.25;padding-right:34px;min-height:2.5em;color:var(--tx)}
+.ind .pt{font-size:clamp(34px,4.5vw,46px);font-weight:800;line-height:1.1;color:var(--az)}
+.ind .row{gap:6px}.ind button{padding:4px 10px;min-width:44px;font-size:14px}
+.ind .pos{position:absolute;top:8px;right:10px;font-size:22px;line-height:1}
+.ind.m1{background:linear-gradient(135deg,#FFE27A,#FFC000);border-color:#E0A800}.ind.m1 .pt,.ind.m1 .nom{color:#3a2a00}
+.ind.m2{background:linear-gradient(135deg,#F4F6FA,#C9D1DE);border-color:#AEB8C8}.ind.m2 .pt{color:#1b2333}
+.ind.m3{background:linear-gradient(135deg,#F3C9A4,#D99560);border-color:#C07A44}.ind.m3 .pt,.ind.m3 .nom{color:#4a2508}
+.ind.m1 button,.ind.m2 button,.ind.m3 button{background:rgba(255,255,255,.55)}
+.ind.sube{animation:sube .35s}
+@keyframes sube{40%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.ind.sube{animation:none}}
 /* temas */
 .tlist{display:grid;gap:8px}
 .titem{display:flex;gap:10px;align-items:baseline;padding:10px 14px;border-radius:12px;background:var(--bg)}
@@ -216,12 +233,25 @@ footer{text-align:center;color:var(--tx2);font-size:13px;padding:10px 18px 80px}
 
 <section class="pan" id="p-marcador">
  <div class="card">
-  <h2>🏆 Marcador por equipos</h2>
-  <div class="row" style="margin-bottom:14px">
-   <button id="eMas">＋ Equipo</button><button id="eMenos">－ Equipo</button><button id="eCero">↺ Poner en cero</button>
-   <span class="muted">Toque el nombre para cambiarlo</span>
+  <div class="row" style="justify-content:space-between;margin-bottom:12px">
+   <h2 style="margin:0">🏆 Marcador</h2>
+   <div class="seg" role="group" aria-label="Tipo de marcador"><button id="mEqB">👥 Por equipos</button><button id="mEstB">🧑‍🎓 Por estudiante</button></div>
   </div>
-  <div class="egrid" id="equipos"></div>
+  <div id="mEq">
+   <div class="row" style="margin-bottom:14px">
+    <button id="eMas">＋ Equipo</button><button id="eMenos">－ Equipo</button><button id="eCero">↺ Poner en cero</button>
+    <span class="muted">Toque el nombre para cambiarlo</span>
+   </div>
+   <div class="egrid" id="equipos"></div>
+  </div>
+  <div id="mEst" hidden>
+   <div class="row" style="margin-bottom:14px">
+    <select id="iOrden" aria-label="Ordenar"><option value="pts">Ordenar: más puntos</option><option value="ap">Ordenar: lista del curso</option></select>
+    <button id="iTodos">＋1 a todos</button><button id="iCopiar">📋 Copiar</button><button id="iCero">↺ Poner en cero</button>
+    <span class="muted">Toque la tarjeta para sumar 1</span>
+   </div>
+   <div class="igrid" id="indiv"></div>
+  </div>
  </div>
 </section>
 
@@ -318,7 +348,7 @@ $('nav').addEventListener('click',function(e){var b=e.target.closest('button');i
 
 function pintarSelector(){var s=$('selCurso');s.innerHTML=S.cursos.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===S.act?' selected':'')+'>'+esc(c.nombre)+' ('+c.lista.length+')</option>'}).join('')}
 $('selCurso').onchange=function(){S.act=this.value;guardar();refrescar()};
-function refrescar(){pintarSelector();dibujar();pintarGrupos();pintarCursos();pintarTemas()}
+function refrescar(){pintarSelector();dibujar();pintarGrupos();pintarCursos();pintarTemas();pintarInd()}
 
 /* ---------- ruleta ---------- */
 var cv=$('rueda'),cx=cv.getContext('2d'),ang=0,girando=false;
@@ -384,13 +414,14 @@ $('tMenos').onclick=function(){if(tIv){if(tRest>70){tFin-=60000;tBase=Math.max(1
 Array.prototype.forEach.call(document.querySelectorAll('[data-min]'),function(b){b.onclick=function(){ponerT(60*parseInt(b.getAttribute('data-min'),10))}});
 
 /* ---------- ruido ---------- */
-var nSt=null,nAn=null,nBuf=null,nIv=null,nLvl=0,nPrev='',nVerde=0,nTot=0,nRojos=0,nUltAv=0,nAC=null;
+var nSt=null,nAn=null,nBuf=null,nIv=null,nLvl=0,nMaxR=0,nIni0=0,nPrev='',nVerde=0,nTot=0,nRojos=0,nUltAv=0,nAC=null;
 function umbrales(){var s=+$('nSen').value;return{u1:0.62-s*0.035,u2:0.85-s*0.035}}
 function marcas(){var u=umbrales();$('nM1').style.left=(u.u1*100)+'%';$('nM2').style.left=(u.u2*100)+'%';$('nSenV').textContent=$('nSen').value}
 $('nSen').oninput=marcas;
 function mmss(s){s=Math.floor(s);return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60}
-function nTick(){if(!nAn)return;nAn.getByteTimeDomainData(nBuf);var q=0;for(var i=0;i<nBuf.length;i++){var x=(nBuf[i]-128)/128;q+=x*x}
- var r=Math.sqrt(q/nBuf.length),v=Math.min(1,r*6);nLvl=nLvl*0.85+v*0.15;var u=umbrales(),z=nLvl<u.u1?'v':(nLvl<u.u2?'a':'r');
+function nTick(){if(!nAn)return;if(nAC&&nAC.state==='suspended')nAC.resume();nAn.getFloatTimeDomainData(nBuf);var q=0;for(var i=0;i<nBuf.length;i++){q+=nBuf[i]*nBuf[i]}
+ var r=Math.sqrt(q/nBuf.length),db=20*Math.log10(Math.max(r,1e-6)),v=Math.max(0,Math.min(1,(db+58)/46));nLvl=nLvl*0.8+v*0.2;
+ if(r>nMaxR)nMaxR=r;if(nIni0&&Date.now()-nIni0>4000){if(nMaxR<0.0003)$('nErr').textContent='El micrófono no está enviando sonido. Revise que no esté silenciado o elija otro micrófono en el candado 🔒 junto a la dirección.';else if($('nErr').textContent.indexOf('no está enviando')===0)$('nErr').textContent='';nMaxR=0;nIni0=Date.now()}var u=umbrales(),z=nLvl<u.u1?'v':(nLvl<u.u2?'a':'r');
  $('nBar').style.width=Math.min(100,nLvl*100)+'%';$('nBar').style.background=z==='v'?'var(--ve)':(z==='a'?'var(--am)':'var(--ro)');luces('n',z);
  var T={v:['Muy bien, buen trabajo','Nivel de ruido adecuado','var(--ve)'],a:['Bajemos la voz','El ruido está subiendo','var(--am)'],r:['¡Silencio, por favor!','Demasiado ruido','var(--ro)']};
  $('nMsg').textContent=T[z][0];$('nSub').textContent=T[z][1];$('nMsg').style.color=T[z][2];
@@ -398,10 +429,11 @@ function nTick(){if(!nAn)return;nAn.getByteTimeDomainData(nBuf);var q=0;for(var 
  $('sVerde').textContent=mmss(nVerde);$('sRojo').textContent=nRojos;$('sPct').textContent=Math.round(nVerde/nTot*100)+' %'}
 $('nIni').onclick=function(){$('nErr').textContent='';if(nSt)return;
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('nErr').textContent='Este navegador no permite usar el micrófono. Abra la página con Chrome o Edge.';return}
+ try{if(!nAC)nAC=new (window.AudioContext||window.webkitAudioContext)();nAC.resume()}catch(e){}
  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}).then(function(st){nSt=st;
-  try{nAC=new (window.AudioContext||window.webkitAudioContext)();nAn=nAC.createAnalyser();nAn.fftSize=1024;nBuf=new Uint8Array(nAn.fftSize);nAC.createMediaStreamSource(st).connect(nAn);nIv=setInterval(nTick,50);$('nIni').textContent='🎤 Escuchando…'}catch(e){$('nErr').textContent='No se pudo usar el micrófono.';nStop()}
- }).catch(function(){$('nErr').textContent='No se dio permiso al micrófono. Pulse el candado 🔒 junto a la dirección y permita el micrófono.'})};
-function nStop(){clearInterval(nIv);nIv=null;if(nSt)nSt.getTracks().forEach(function(t){t.stop()});nSt=null;nAn=null;if(nAC){try{nAC.close()}catch(e){}nAC=null}
+  try{if(!nAC)nAC=new (window.AudioContext||window.webkitAudioContext)();nAC.resume();nAn=nAC.createAnalyser();nAn.fftSize=2048;nBuf=new Float32Array(nAn.fftSize);nAC.createMediaStreamSource(st).connect(nAn);nMaxR=0;nIni0=Date.now();nIv=setInterval(nTick,50);$('nIni').textContent='🎤 Escuchando…'}catch(e){$('nErr').textContent='No se pudo usar el micrófono.';nStop()}
+ }).catch(function(){if(nAC){try{nAC.close()}catch(e){}nAC=null}$('nErr').textContent='No se dio permiso al micrófono. Pulse el candado 🔒 junto a la dirección y permita el micrófono.'})};
+function nStop(){clearInterval(nIv);nIv=null;nIni0=0;nLvl=0;if(nSt)nSt.getTracks().forEach(function(t){t.stop()});nSt=null;nAn=null;if(nAC){try{nAC.close()}catch(e){}nAC=null}
  $('nIni').textContent='🎤 Escuchar';$('nBar').style.width='0';luces('n','');$('nMsg').textContent='Detenido';$('nMsg').style.color='var(--az)';$('nSub').textContent='Pulse «Escuchar» para continuar'}
 $('nStop').onclick=nStop;
 $('nReset').onclick=function(){nVerde=0;nTot=0;nRojos=0;nPrev='';$('sVerde').textContent='0:00';$('sRojo').textContent='0';$('sPct').textContent='—'};
@@ -414,6 +446,29 @@ $('equipos').addEventListener('input',function(e){if(e.target.tagName==='INPUT')
 $('eMas').onclick=function(){if(S.equipos.length>=8){toast('Máximo 8 equipos.');return}S.equipos.push({n:'Equipo '+(S.equipos.length+1),p:0});guardar();pintarEq()};
 $('eMenos').onclick=function(){if(S.equipos.length<=2){toast('Mínimo 2 equipos.');return}S.equipos.pop();guardar();pintarEq()};
 $('eCero').onclick=function(){S.equipos.forEach(function(e){e.p=0});guardar();pintarEq()};
+/* ---------- marcador por estudiante ---------- */
+function puntosCurso(){var c=curso();if(!c)return {};S.ind=S.ind||{};if(!S.ind[c.id]||typeof S.ind[c.id]!=='object')S.ind[c.id]={};return S.ind[c.id]}
+function pintarModo(){var est=S.mModo==='est';$('mEq').hidden=est;$('mEst').hidden=!est;$('mEqB').classList.toggle('on',!est);$('mEstB').classList.toggle('on',est);$('mEqB').setAttribute('aria-pressed',String(!est));$('mEstB').setAttribute('aria-pressed',String(est))}
+$('mEqB').onclick=function(){S.mModo='eq';guardar();pintarModo()};
+$('mEstB').onclick=function(){S.mModo='est';guardar();pintarModo();pintarInd()};
+var ultimo='';
+function pintarInd(){var L=lista(),P=puntosCurso();$('iOrden').value=S.iOrden==='ap'?'ap':'pts';
+ if(!L.length){$('indiv').innerHTML='<p class="muted">Este curso no tiene estudiantes. Agréguelos en ⚙️ Mis cursos.</p>';return}
+ var F=L.map(function(n,i){return{n:n,i:i,p:Math.max(0,parseInt(P[n],10)||0)}});
+ var F2=F.slice();if(S.iOrden!=='ap')F2.sort(function(a,b){return b.p-a.p||a.i-b.i});
+ var med=['','🥇','🥈','🥉'],minimo=Math.min.apply(null,F.map(function(x){return x.p}));
+ $('indiv').innerHTML=F2.map(function(e){var pos=1+F.filter(function(x){return x.p>e.p}).length,m=e.p>minimo&&pos<=3?pos:0;
+  return '<div class="ind'+(m?' m'+m:'')+(e.n===ultimo?' sube':'')+'" data-n="'+esc(e.n)+'" role="button" tabindex="0" aria-label="'+esc(e.n)+', '+e.p+' puntos. Pulse para sumar 1">'+(m?'<span class="pos" aria-hidden="true">'+med[m]+'</span>':'')+
+   '<div class="nom">'+esc(e.n)+'</div><div class="pt">'+e.p+'</div><div class="row"><button data-d="-1" aria-label="Restar 1">−1</button><button data-d="5" aria-label="Sumar 5">+5</button></div></div>'}).join('');ultimo=''}
+function sumarInd(n,d){var P=puntosCurso(),v=Math.max(0,(parseInt(P[n],10)||0)+d);if(v)P[n]=v;else delete P[n];if(d>0){ultimo=n;tono(d>1?988:784,0.15,'triangle',0.2)}guardar();pintarInd()}
+$('indiv').addEventListener('click',function(e){var c=e.target.closest('.ind');if(!c)return;var n=c.getAttribute('data-n'),b=e.target.closest('button');sumarInd(n,b?+b.getAttribute('data-d'):1)});
+$('indiv').addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('ind')){e.preventDefault();sumarInd(e.target.getAttribute('data-n'),1)}});
+$('iOrden').onchange=function(){S.iOrden=this.value;guardar();pintarInd()};
+$('iTodos').onclick=function(){var L=lista();if(!L.length)return;var P=puntosCurso();L.forEach(function(n){P[n]=(parseInt(P[n],10)||0)+1});tono(784,0.15,'triangle',0.2);guardar();pintarInd();toast('+1 a todo el curso')};
+$('iCero').onclick=function(){var c=curso();if(!c)return;if(!confirm('¿Poner en cero los puntos de todos los estudiantes de «'+c.nombre+'»? Esto no se puede deshacer.'))return;S.ind=S.ind||{};S.ind[c.id]={};guardar();pintarInd();toast('Puntos en cero')};
+$('iCopiar').onclick=function(){var P=puntosCurso(),t='Estudiante\tPuntos\n'+lista().map(function(n){return n+'\t'+(parseInt(P[n],10)||0)}).join('\n');
+ function viejo(){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}a.remove();toast(ok?'Lista copiada: péguela en Excel':'No se pudo copiar en este navegador')}
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('Lista copiada: péguela en Excel')},viejo);else viejo()};
 
 /* ---------- temas ---------- */
 var tmUsados=[],tmModo='';
@@ -450,10 +505,10 @@ $('cGuardar').onclick=function(){var nom=$('cNombre').value.replace(/\s+/g,' ').
  guardar();refrescar();editar(editId);$('cInfo').textContent='✔ Guardado: '+L.length+' estudiantes';toast('Curso guardado')};
 $('cBorrar').onclick=function(){var c=null;S.cursos.forEach(function(x){if(x.id===editId)c=x});if(!c)return;
  if(!confirm('¿Eliminar el curso «'+c.nombre+'» con sus '+c.lista.length+' estudiantes? Esto no se puede deshacer.'))return;
- S.cursos=S.cursos.filter(function(x){return x.id!==c.id});delete S.usados[c.id];delete S.grupos[c.id];
+ S.cursos=S.cursos.filter(function(x){return x.id!==c.id});delete S.usados[c.id];delete S.grupos[c.id];if(S.ind)delete S.ind[c.id];
  if(!S.cursos.length){var b=base();S.cursos=[{id:b.act,nombre:'Mi curso',lista:[]}]}
  if(!curso())S.act=S.cursos[0].id;editId=S.act;guardar();refrescar();editar(S.act);toast('Curso eliminado')};
-$('rDesc').onclick=function(){var o={app:'herramientas-aula',v:1,fecha:new Date().toISOString().slice(0,10),cursos:S.cursos.map(function(c){return{nombre:c.nombre,lista:c.lista}}),temas:S.temas||'',equipos:S.equipos};
+$('rDesc').onclick=function(){var o={app:'herramientas-aula',v:1,fecha:new Date().toISOString().slice(0,10),cursos:S.cursos.map(function(c){return{nombre:c.nombre,lista:c.lista}}),temas:S.temas||'',equipos:S.equipos,ind:S.cursos.reduce(function(o,c){var p=S.ind&&S.ind[c.id];if(p&&Object.keys(p).length)o[c.nombre]=p;return o},{})};
  var b=new Blob([JSON.stringify(o,null,1)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='respaldo_herramientas_aula_'+o.fecha+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},1500)};
 $('rCargar').onclick=function(){$('rFile').click()};
 $('rFile').onchange=function(){var f=this.files&&this.files[0];this.value='';if(!f)return;if(f.size>2e6){toast('El archivo es demasiado grande.');return}
@@ -461,7 +516,8 @@ $('rFile').onchange=function(){var f=this.files&&this.files[0];this.value='';if(
   var cs=o.cursos.slice(0,30).map(function(c){return{id:nuevoId(),nombre:String(c.nombre||'Curso').slice(0,60),lista:limpiarLista((Array.isArray(c.lista)?c.lista:[]).map(String).join('\n'))}}).filter(function(c){return c.nombre});
   if(!cs.length)throw 0;
   if(!confirm('Se reemplazarán sus cursos actuales por los '+cs.length+' cursos del respaldo. ¿Continuar?'))return;
-  S.cursos=cs;S.act=cs[0].id;S.usados={};S.grupos={};if(typeof o.temas==='string'){S.temas=o.temas.slice(0,8000);$('temasTxt').value=S.temas}
+  S.cursos=cs;S.act=cs[0].id;S.usados={};S.grupos={};S.ind={};
+  if(o.ind&&typeof o.ind==='object')cs.forEach(function(c){var p=o.ind[c.nombre];if(p&&typeof p==='object'){var q={};c.lista.forEach(function(n){var v=parseInt(p[n],10);if(v>0)q[n]=Math.min(v,99999)});S.ind[c.id]=q}});if(typeof o.temas==='string'){S.temas=o.temas.slice(0,8000);$('temasTxt').value=S.temas}
   if(Array.isArray(o.equipos)&&o.equipos.length>=2)S.equipos=o.equipos.slice(0,8).map(function(e){return{n:String(e&&e.n||'Equipo').slice(0,24),p:Math.max(0,parseInt(e&&e.p,10)||0)}});
   editId=null;guardar();refrescar();pintarEq();toast('Respaldo cargado')}catch(e){toast('Ese archivo no es un respaldo válido.')}};r.readAsText(f)};
 
@@ -484,7 +540,7 @@ document.addEventListener('keydown',function(e){if(e.target.matches('input,texta
  if(e.code==='Space'){if(actual==='ruleta'){e.preventDefault();$('bGirar').click()}else if(actual==='tiempo'){e.preventDefault();$('tIni').click()}}});
 addEventListener('resize',function(){if(cfOn){cf.width=innerWidth;cf.height=innerHeight}});
 
-cargar();$('temasTxt').value=S.temas||'';pintarSonido();marcas();pintarSelector();dibujar();pintarGrupos();pintarT();pintarEq();pintarTemas();
+cargar();$('temasTxt').value=S.temas||'';pintarSonido();marcas();pintarSelector();dibujar();pintarGrupos();pintarT();pintarEq();pintarTemas();pintarModo();pintarInd();
 })();
 </script>
 </body>
